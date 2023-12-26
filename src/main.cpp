@@ -41,7 +41,7 @@ TimeSeries ts1(5, "coffes_consumed", "{job=\"cmi_coffe_counter\",location=\"schw
 
 void setup()
 {
-  Serial.begin(115200);
+  Serial.begin(SERIAL_BAUD);
   while (!Serial)
     ;
   Serial.println("Starting up coffe counter ...");
