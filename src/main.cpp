@@ -16,7 +16,6 @@ PromLokiTransport transport;
 PromClient client(transport);
 
 String wifi_status;
-int64_t coffee_delta_count = 0;
 int64_t coffee_count_total = 0;
 int64_t current_time = 0;
 int64_t last_metric_ingestion = 0;
@@ -61,7 +60,7 @@ void setup()
   parameters.detection_threshold_ms = MOTION_DETECTION_DURATION_SECONDS * 1000;
   parameters.timer = timer0;
   parameters.vibration_counter_sem = &vibration_counter_sem;
-  parameters.vibration_counter = &coffee_delta_count;
+  parameters.vibration_counter = &coffee_count_total;
   create_vibration_dection_task(&vibration_detection_task, &parameters);
 
 #ifdef heltec_wifi_kit32
@@ -154,23 +153,19 @@ void handleSampleIngestion()
   }
   if (xSemaphoreTake(vibration_counter_sem, (TickType_t)10) == pdTRUE)
   {
-    Serial.println("Delta coffee count: " + String(coffee_delta_count));
     Serial.println("Total coffee count: " + String(coffee_count_total));
-
-    if (DEBUG)
+    if (ts1.addSample(current_time, coffee_count_total))
     {
-      Serial.println("Ingesting metrics");
-    }
-    if (ts1.addSample(current_time, coffee_count_total + coffee_delta_count))
-    {
-      coffee_count_total = coffee_count_total + coffee_delta_count;
-      coffee_delta_count = 0;
+      if (DEBUG)
+      {
+        Serial.println("Ingesting metrics: Sample added");
+      }
     }
     else
     {
       if (DEBUG)
       {
-        Serial.println("Failed to add sample" + String(ts1.errmsg));
+        Serial.println("Ingesting metrics: Failed to add sample" + String(ts1.errmsg));
       }
     }
 
@@ -197,8 +192,7 @@ void updateDisplay()
 #ifdef heltec_wifi_kit32
   if (xSemaphoreTake(vibration_counter_sem, (TickType_t)10) == pdTRUE)
   {
-    Heltec.display->drawString(0, 0, "Coffee Delta Count: " + String(coffee_delta_count));
-    Heltec.display->drawString(0, 10, "Coffee Total Count: " + String(coffee_count_total));
+    Heltec.display->drawString(0, 0, "Coffee Total Count: " + String(coffee_count_total));
     Heltec.display->display();
     xSemaphoreGive(vibration_counter_sem);
   }

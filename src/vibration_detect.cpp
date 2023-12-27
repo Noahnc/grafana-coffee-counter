@@ -44,9 +44,6 @@ void vibration_dection_task(void *args)
             if (xSemaphoreTake(*parameters.vibration_counter_sem, portMAX_DELAY) == pdTRUE)
             {
                 *(parameters.vibration_counter)+=1;
-                if(DEBUG){
-                    Serial.println("Vibration counter: " + String(*(parameters.vibration_counter)));
-                }
                 xSemaphoreGive(*parameters.vibration_counter_sem);
             }
         }
