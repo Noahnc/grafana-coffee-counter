@@ -11,6 +11,7 @@
 
 // Enable debug logging to serial
 #define DEBUG true
+#define SERIAL_BAUD MONITOR_SPEED
 
 // Interval in seconds between sending metrics to Grafana Cloud
 #define REMOTE_WRITE_INTERVAL_SECONDS 180

@@ -1,11 +1,14 @@
 
 #include <Arduino.h>
-#include "heltec.h"
 #include <PromLokiTransport.h>
 #include <PrometheusArduino.h>
 #include <config.h>
 #include <certificates.h>
 #include <tuple>
+
+#ifdef heltec_wifi_kit32
+#include "heltec.h"
+#endif
 
 PromLokiTransport transport;
 PromClient client(transport);
@@ -38,16 +41,20 @@ TimeSeries ts1(5, "coffes_consumed", "{job=\"cmi_coffe_counter\",location=\"schw
 
 void setup()
 {
-  Serial.begin(115200);
+  Serial.begin(SERIAL_BAUD);
   while (!Serial)
     ;
   Serial.println("Starting up coffe counter ...");
   pinMode(VIBRATION_SENSOR_PIN, INPUT);
+
+  #ifdef heltec_wifi_kit32
   Heltec.begin(true, false, true, true, 915E6);
   Heltec.display->setContrast(255);
   Heltec.display->clear();
   Heltec.display->drawString(0, 0, "Booting ...");
   Heltec.display->display();
+  #endif
+
   transport.setUseTls(true);
   transport.setCerts(grafanaCert, strlen(grafanaCert));
   transport.setWifiSsid(WIFI_SSID);
@@ -86,8 +93,11 @@ void setup()
   current_time = transport.getTimeMillis();
   last_metric_ingestion = current_time;
   last_remote_write = current_time;
+  
+  #ifdef heltec_wifi_kit32
   Heltec.display->clear();
   Heltec.display->drawString(0, 0, "Startup done");
+  #endif
 };
 
 void loop()
@@ -236,9 +246,12 @@ bool detectMotion()
 void updateDisplay()
 {
   String motion_status = motion_detected ? "vibrating" : "not vibrating";
+
+  #ifdef heltec_wifi_kit32
   Heltec.display->clear();
   Heltec.display->drawString(0, 0, "Coffee Count Current: " + String(coffe_count_current));
   Heltec.display->drawString(0, 10, "Coffee Count Total: " + String(coffe_count_total));
   Heltec.display->drawString(0, 20, "Vibration: " + motion_status);
   Heltec.display->display();
+  #endif
 }

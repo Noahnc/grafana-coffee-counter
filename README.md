@@ -4,11 +4,13 @@ ToDo: Add documentation
 
 ## Secrets
 
-Das Projekt benötigt folgende Secrets, die in einem .env File im Project-Root abgelegt werden müssen:
+Das Projekt benötigt folgende Secrets, die in einer Datei `user_config.ini` im Projektverzeichnis abgelegt oder als Umgebungsvariable definiert werden müssen:
 
-```
-GRAFANA_USER=<Grafana User>
-GRAFANA_PASSWORD=<Grafana Password>
-WIFI_SSID=<WIFI SSID>
-WIFI_PASSWORD=<WIFI Password>
+```INI
+[user_config]
+build_flags =
+	-D ENV_GRAFANA_USER=\"<Grafana user>\"
+	-D ENV_GRAFANA_PASSWORD=\"<Grafana password>=\"
+	-D ENV_WIFI_SSID=\"<Wifi SSID>\"
+	-D ENV_WIFI_PASSWORD=\"<Wifi password>!\"
 ```
