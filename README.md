@@ -1,4 +1,4 @@
-# Grafana Coffe Counter
+# Grafana Coffee Counter
 
 ToDo: Add documentation
 

@@ -40,7 +40,7 @@ void handleMetricsSend();
 WriteRequest req(2, 1024);
 
 // Define a TimeSeries which can hold up to 5 samples, has a name of `uptime_milliseconds`
-TimeSeries ts1(5, "coffes_consumed", "{job=\"cmi_coffe_counter\",location=\"schwerzenbach_4OG\"}");
+TimeSeries ts1(5, "coffees_consumed_counter", "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}");
 
 void setup()
 {
@@ -154,11 +154,17 @@ void handleSampleIngestion()
   }
   if (xSemaphoreTake(vibration_counter_sem, (TickType_t)10) == pdTRUE)
   {
+    Serial.println("Delta coffee count: " + String(coffee_delta_count));
+    Serial.println("Total coffee count: " + String(coffee_count_total));
     if (coffee_delta_count > 0)
     {
+      if (DEBUG)
+      {
+        Serial.println("Ingesting metrics");
+      }
       if (ts1.addSample(current_time, coffee_delta_count))
       {
-        coffee_count_total = coffee_delta_count + coffee_delta_count;
+        coffee_count_total = coffee_count_total + coffee_delta_count;
         coffee_delta_count = 0;
       }
       else
@@ -167,12 +173,6 @@ void handleSampleIngestion()
         {
           Serial.println("Failed to add sample" + String(ts1.errmsg));
         }
-      }
-      if (DEBUG)
-      {
-        Serial.println("Ingesting metrics");
-        Serial.println("Delta coffee count: " + String(coffee_delta_count));
-        Serial.println("Total coffee count: " + String(coffee_count_total));
       }
     }
     xSemaphoreGive(vibration_counter_sem);
