@@ -156,25 +156,24 @@ void handleSampleIngestion()
   {
     Serial.println("Delta coffee count: " + String(coffee_delta_count));
     Serial.println("Total coffee count: " + String(coffee_count_total));
-    if (coffee_delta_count > 0)
+
+    if (DEBUG)
+    {
+      Serial.println("Ingesting metrics");
+    }
+    if (ts1.addSample(current_time, coffee_count_total + coffee_delta_count))
+    {
+      coffee_count_total = coffee_count_total + coffee_delta_count;
+      coffee_delta_count = 0;
+    }
+    else
     {
       if (DEBUG)
       {
-        Serial.println("Ingesting metrics");
-      }
-      if (ts1.addSample(current_time, coffee_delta_count))
-      {
-        coffee_count_total = coffee_count_total + coffee_delta_count;
-        coffee_delta_count = 0;
-      }
-      else
-      {
-        if (DEBUG)
-        {
-          Serial.println("Failed to add sample" + String(ts1.errmsg));
-        }
+        Serial.println("Failed to add sample" + String(ts1.errmsg));
       }
     }
+
     xSemaphoreGive(vibration_counter_sem);
     last_metric_ingestion = transport.getTimeMillis();
   }

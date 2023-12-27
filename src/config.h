@@ -26,9 +26,3 @@
 #define VIBRATION_SENSOR_PIN 36
 // Pin connected to a LED to indicated that vibration is detected
 #define VIBRATION_DETECTION_LED_VCC 25
-
-// Amount of loops to buffer a positive vibration signal.
-#define VIBRATION_BUFFER_LOOP_COUNT 50
-
-// Amount of positive vibration signals during the buffer loop to count as a motion event.
-#define VIBRATION_BUFFER_POSITIVE_THRESHOLD 2
