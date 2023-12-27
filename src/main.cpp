@@ -10,26 +10,29 @@
 #include "heltec.h"
 #endif
 
+#include "vibration_detect.h"
+
 PromLokiTransport transport;
 PromClient client(transport);
 
 String wifi_status;
-bool vibration_detected_count = 0;
-bool motion_detected = false;
-bool coffe_count_increased = false;
-int16_t buffer_loop_count = 0;
-int16_t coffe_count_current = 0;
-int64_t coffe_count_total = 0;
+int64_t coffee_delta_count = 0;
+int64_t coffee_count_total = 0;
 int64_t current_time = 0;
-int64_t motion_detection_start = 0;
 int64_t last_metric_ingestion = 0;
 int64_t last_remote_write = 0;
+
+// timer 0 of esp32 for vibration detection
+hw_timer_t *timer0 = NULL;
+// background task for vibration detection
+TaskHandle_t vibration_detection_task;
+// counter for the detected vibrations
+SemaphoreHandle_t vibration_counter_sem;
 
 // Function prototypes
 bool detectMotion();
 void updateDisplay();
 String performRemoteWrite();
-void handleCoffeCountIncrease();
 bool handleMotionBuffer();
 void handleSampleIngestion();
 void handleMetricsSend();
@@ -45,15 +48,29 @@ void setup()
   while (!Serial)
     ;
   Serial.println("Starting up coffe counter ...");
-  pinMode(VIBRATION_SENSOR_PIN, INPUT);
+  Serial.println("WiFi SSID: " + String(WIFI_SSID));
 
-  #ifdef heltec_wifi_kit32
+  pinMode(VIBRATION_SENSOR_PIN, INPUT);
+  pinMode(VIBRATION_DETECTION_LED_VCC, OUTPUT);
+
+  // setup background task for vibration detection
+  timer0 = timerBegin(0, 80, true);
+  vibration_counter_sem = xSemaphoreCreateBinary();
+  xSemaphoreGive(vibration_counter_sem);
+  vibration_detection_parameters parameters;
+  parameters.detection_threshold_ms = MOTION_DETECTION_DURATION_SECONDS * 1000;
+  parameters.timer = timer0;
+  parameters.vibration_counter_sem = &vibration_counter_sem;
+  parameters.vibration_counter = &coffee_delta_count;
+  create_vibration_dection_task(&vibration_detection_task, &parameters);
+
+#ifdef heltec_wifi_kit32
   Heltec.begin(true, false, true, true, 915E6);
   Heltec.display->setContrast(255);
   Heltec.display->clear();
   Heltec.display->drawString(0, 0, "Booting ...");
   Heltec.display->display();
-  #endif
+#endif
 
   transport.setUseTls(true);
   transport.setCerts(grafanaCert, strlen(grafanaCert));
@@ -93,31 +110,18 @@ void setup()
   current_time = transport.getTimeMillis();
   last_metric_ingestion = current_time;
   last_remote_write = current_time;
-  
-  #ifdef heltec_wifi_kit32
+
+#ifdef heltec_wifi_kit32
   Heltec.display->clear();
   Heltec.display->drawString(0, 0, "Startup done");
-  #endif
+#endif
 };
 
 void loop()
 {
-
-  // return main loop as long as motion buffer is not full
-  if (handleMotionBuffer() == false)
-  {
-    return;
-  }
-
-  if (DEBUG)
-    Serial.println("Current motion status: " + String(motion_detected));
-
   current_time = transport.getTimeMillis();
 
-  handleCoffeCountIncrease();
-
   handleSampleIngestion();
-
   handleMetricsSend();
 
   // Check if the wifi connection is still up and reconnect if necessary
@@ -125,6 +129,8 @@ void loop()
 
   // Update the display
   updateDisplay();
+
+  vTaskDelay(50 / portTICK_PERIOD_MS);
 }
 
 void handleMetricsSend()
@@ -142,79 +148,37 @@ void handleMetricsSend()
 
 void handleSampleIngestion()
 {
-  if ((current_time - last_metric_ingestion) > (METRICS_INGESTION_RATE_SECONDS * 1000))
+  if ((current_time - last_metric_ingestion) <= (METRICS_INGESTION_RATE_SECONDS * 1000))
   {
-    if (DEBUG)
-      Serial.println("Ingesting metrics");
-    if (!ts1.addSample(current_time, coffe_count_current))
+    return;
+  }
+  if (xSemaphoreTake(vibration_counter_sem, (TickType_t)10) == pdTRUE)
+  {
+    if (coffee_delta_count > 0)
     {
+      if (ts1.addSample(current_time, coffee_delta_count))
+      {
+        coffee_count_total = coffee_delta_count + coffee_delta_count;
+        coffee_delta_count = 0;
+      }
+      else
+      {
+        if (DEBUG)
+        {
+          Serial.println("Failed to add sample" + String(ts1.errmsg));
+        }
+      }
       if (DEBUG)
-        Serial.println("Failed to add sample" + String(ts1.errmsg));
+      {
+        Serial.println("Ingesting metrics");
+        Serial.println("Delta coffee count: " + String(coffee_delta_count));
+        Serial.println("Total coffee count: " + String(coffee_count_total));
+      }
     }
+    xSemaphoreGive(vibration_counter_sem);
     last_metric_ingestion = transport.getTimeMillis();
-    coffe_count_current = 0;
   }
 }
-
-void handleCoffeCountIncrease()
-{
-  if (motion_detected == false)
-  {
-    motion_detection_start = 0;
-    coffe_count_increased = false;
-    return;
-  }
-
-  if (motion_detection_start == 0)
-  {
-    if (DEBUG)
-      Serial.println("Motion detected, starting motion detection timer");
-    motion_detection_start = transport.getTimeMillis();
-    return;
-  }
-
-  if ((current_time - motion_detection_start) > (MOTION_DETECTION_DURATION_SECONDS * 1000))
-  {
-    if (coffe_count_increased)
-    {
-      if (DEBUG)
-        Serial.println("Motion detected for more than " + String(MOTION_DETECTION_DURATION_SECONDS) + " seconds, but coffe count already increased, skipping");
-      return;
-    }
-    coffe_count_current++;
-    coffe_count_total++;
-    coffe_count_increased = true;
-    if (DEBUG)
-    {
-      Serial.println("Motion detected for more than " + String(MOTION_DETECTION_DURATION_SECONDS) + " seconds, increase coffe count");
-      Serial.println("Current coffe count: " + String(coffe_count_current));
-      Serial.println("Total coffe count: " + String(coffe_count_total));
-    }
-  }
-}
-
-bool handleMotionBuffer()
-{
-  buffer_loop_count++;
-  bool motion = detectMotion();
-  if (buffer_loop_count <= VIBRATION_BUFFER_LOOP_COUNT)
-  {
-    if (motion)
-    {
-      vibration_detected_count++;
-    }
-    return false;
-  }
-
-  buffer_loop_count = 0;
-  motion_detected = false;
-  if (vibration_detected_count >= VIBRATION_BUFFER_POSITIVE_THRESHOLD)
-  {
-    motion_detected = true;
-  }
-  vibration_detected_count = 0;
-  return true;
-};
 
 String performRemoteWrite()
 {
@@ -229,29 +193,15 @@ String performRemoteWrite()
   return "success";
 }
 
-bool detectMotion()
-{
-  bool motion_detected = false;
-  if (digitalRead(VIBRATION_SENSOR_PIN) == HIGH)
-  {
-    motion_detected = true;
-  }
-  if (DEBUG)
-  {
-    Serial.println("Motion detected: " + String(motion_detected));
-  }
-  return motion_detected;
-}
-
 void updateDisplay()
 {
-  String motion_status = motion_detected ? "vibrating" : "not vibrating";
-
-  #ifdef heltec_wifi_kit32
-  Heltec.display->clear();
-  Heltec.display->drawString(0, 0, "Coffee Count Current: " + String(coffe_count_current));
-  Heltec.display->drawString(0, 10, "Coffee Count Total: " + String(coffe_count_total));
-  Heltec.display->drawString(0, 20, "Vibration: " + motion_status);
-  Heltec.display->display();
-  #endif
+#ifdef heltec_wifi_kit32
+  if (xSemaphoreTake(vibration_counter_sem, (TickType_t)10) == pdTRUE)
+  {
+    Heltec.display->drawString(0, 0, "Coffee Delta Count: " + String(coffee_delta_count));
+    Heltec.display->drawString(0, 10, "Coffee Total Count: " + String(coffee_count_total));
+    Heltec.display->display();
+    xSemaphoreGive(vibration_counter_sem);
+  }
+#endif
 }
