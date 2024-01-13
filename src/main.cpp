@@ -39,7 +39,10 @@ void handleMetricsSend();
 WriteRequest req(2, 1024);
 
 // Define a TimeSeries which can hold up to 5 samples, has a name of `uptime_milliseconds`
-TimeSeries ts1(5, "coffees_consumed_counter", "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}");
+TimeSeries coffees_consumed(5, "coffees_consumed_counter", "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}");
+TimeSeries system_memory_free_mb(5, "system_memory_free_mb", "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}");
+TimeSeries system_memory_total_mb(5, "system_memory_total_mb", "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}");
+TimeSeries system_network_wifi_rssi(5, "system_network_wifi_rssi", "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}");
 
 void setup()
 {
@@ -102,7 +105,7 @@ void setup()
     };
   }
 
-  req.addTimeSeries(ts1);
+  req.addTimeSeries(coffees_consumed);
   if (DEBUG)
     Serial.println("Startup done");
 
@@ -154,23 +157,31 @@ void handleSampleIngestion()
   if (xSemaphoreTake(vibration_counter_sem, (TickType_t)10) == pdTRUE)
   {
     Serial.println("Total coffee count: " + String(coffee_count_total));
-    if (ts1.addSample(current_time, coffee_count_total))
-    {
-      if (DEBUG)
-      {
-        Serial.println("Ingesting metrics: Sample added");
-      }
-    }
-    else
-    {
-      if (DEBUG)
-      {
-        Serial.println("Ingesting metrics: Failed to add sample" + String(ts1.errmsg));
-      }
-    }
+    ingestMetricSample(coffees_consumed, current_time, coffee_count_total);
 
     xSemaphoreGive(vibration_counter_sem);
-    last_metric_ingestion = transport.getTimeMillis();
+  }
+  ingestMetricSample(system_memory_free_mb, current_time, ESP.getFreeHeap() / 1024 / 1024);
+  ingestMetricSample(system_memory_total_mb, current_time, ESP.getHeapSize() / 1024 / 1024);
+  ingestMetricSample(system_network_wifi_rssi, current_time, WiFi.RSSI());
+  last_metric_ingestion = transport.getTimeMillis();
+}
+
+void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value)
+{
+  if (ts.addSample(timestamp, value))
+  {
+    if (DEBUG)
+    {
+      Serial.println("Ingesting metrics: Sample added");
+    }
+  }
+  else
+  {
+    if (DEBUG)
+    {
+      Serial.println("Ingesting metrics: Failed to add sample" + String(ts.errmsg));
+    }
   }
 }
 
@@ -183,7 +194,7 @@ String performRemoteWrite()
     Serial.println(client.errmsg);
     return "error";
   }
-  ts1.resetSamples();
+  coffees_consumed.resetSamples();
   return "success";
 }
 
