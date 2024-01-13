@@ -39,7 +39,7 @@ void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value);
 
 WriteRequest req(2, 1024);
 
-// Define a TimeSeries which can hold up to 5 samples, has a name of `uptime_milliseconds`
+// TimeSeries that can hold 5 samples each. Make sure to set sample_ingestation rate and remote_write_interval accordingly
 TimeSeries coffees_consumed(5, "coffees_consumed_counter", "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}");
 TimeSeries system_memory_free_bytes(5, "system_memory_free_bytes", "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}");
 TimeSeries system_memory_total_bytes(5, "system_memory_total_bytes", "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}");
