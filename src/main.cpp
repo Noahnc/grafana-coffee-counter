@@ -108,6 +108,10 @@ void setup()
   }
 
   req.addTimeSeries(coffees_consumed);
+  req.addTimeSeries(system_memory_free_bytes);
+  req.addTimeSeries(system_memory_total_bytes);
+  req.addTimeSeries(system_network_wifi_rssi);
+  req.addTimeSeries(system_largest_heap_block_size_bytes);
   if (DEBUG)
     Serial.println("Startup done");
 
@@ -198,6 +202,10 @@ String performRemoteWrite()
     return "error";
   }
   coffees_consumed.resetSamples();
+  system_memory_free_bytes.resetSamples();
+  system_memory_total_bytes.resetSamples();
+  system_network_wifi_rssi.resetSamples();
+  system_largest_heap_block_size_bytes.resetSamples();
   return "success";
 }
 
