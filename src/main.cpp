@@ -35,6 +35,7 @@ String performRemoteWrite();
 bool handleMotionBuffer();
 void handleSampleIngestion();
 void handleMetricsSend();
+void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value);
 
 WriteRequest req(2, 1024);
 
