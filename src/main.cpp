@@ -44,6 +44,7 @@ TimeSeries coffees_consumed(5, "coffees_consumed_counter", "{job=\"cmi_coffee_co
 TimeSeries system_memory_free_bytes(5, "system_memory_free_bytes", "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}");
 TimeSeries system_memory_total_bytes(5, "system_memory_total_bytes", "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}");
 TimeSeries system_network_wifi_rssi(5, "system_network_wifi_rssi", "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}");
+TimeSeries system_largest_heap_block_size_bytes(5, "system_largest_heap_block_size_bytes", "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}");
 
 void setup()
 {
@@ -165,6 +166,7 @@ void handleSampleIngestion()
   ingestMetricSample(system_memory_free_bytes, current_time, ESP.getFreeHeap());
   ingestMetricSample(system_memory_total_bytes, current_time, ESP.getHeapSize());
   ingestMetricSample(system_network_wifi_rssi, current_time, WiFi.RSSI());
+  ingestMetricSample(system_largest_heap_block_size_bytes, current_time, ESP.getMaxAllocHeap());
   last_metric_ingestion = transport.getTimeMillis();
 }
 
