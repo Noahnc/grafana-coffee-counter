@@ -35,11 +35,17 @@ String performRemoteWrite();
 bool handleMotionBuffer();
 void handleSampleIngestion();
 void handleMetricsSend();
+void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value);
 
 WriteRequest req(2, 1024);
 
-// Define a TimeSeries which can hold up to 5 samples, has a name of `uptime_milliseconds`
-TimeSeries ts1(5, "coffees_consumed_counter", "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}");
+const char *labels = "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}";
+// TimeSeries that can hold 5 samples each. Make sure to set sample_ingestation rate and remote_write_interval accordingly
+TimeSeries coffees_consumed(5, "coffees_consumed_counter", labels);
+TimeSeries system_memory_free_bytes(5, "system_memory_free_bytes", labels);
+TimeSeries system_memory_total_bytes(5, "system_memory_total_bytes", labels);
+TimeSeries system_network_wifi_rssi(5, "system_network_wifi_rssi", labels);
+TimeSeries system_largest_heap_block_size_bytes(5, "system_largest_heap_block_size_bytes", labels);
 
 void setup()
 {
@@ -102,7 +108,11 @@ void setup()
     };
   }
 
-  req.addTimeSeries(ts1);
+  req.addTimeSeries(coffees_consumed);
+  req.addTimeSeries(system_memory_free_bytes);
+  req.addTimeSeries(system_memory_total_bytes);
+  req.addTimeSeries(system_network_wifi_rssi);
+  req.addTimeSeries(system_largest_heap_block_size_bytes);
   if (DEBUG)
     Serial.println("Startup done");
 
@@ -154,23 +164,32 @@ void handleSampleIngestion()
   if (xSemaphoreTake(vibration_counter_sem, (TickType_t)10) == pdTRUE)
   {
     Serial.println("Total coffee count: " + String(coffee_count_total));
-    if (ts1.addSample(current_time, coffee_count_total))
-    {
-      if (DEBUG)
-      {
-        Serial.println("Ingesting metrics: Sample added");
-      }
-    }
-    else
-    {
-      if (DEBUG)
-      {
-        Serial.println("Ingesting metrics: Failed to add sample" + String(ts1.errmsg));
-      }
-    }
+    ingestMetricSample(coffees_consumed, current_time, coffee_count_total);
 
     xSemaphoreGive(vibration_counter_sem);
-    last_metric_ingestion = transport.getTimeMillis();
+  }
+  ingestMetricSample(system_memory_free_bytes, current_time, ESP.getFreeHeap());
+  ingestMetricSample(system_memory_total_bytes, current_time, ESP.getHeapSize());
+  ingestMetricSample(system_network_wifi_rssi, current_time, WiFi.RSSI());
+  ingestMetricSample(system_largest_heap_block_size_bytes, current_time, ESP.getMaxAllocHeap());
+  last_metric_ingestion = transport.getTimeMillis();
+}
+
+void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value)
+{
+  if (ts.addSample(timestamp, value))
+  {
+    if (DEBUG)
+    {
+      Serial.println("Ingesting metrics: Sample added");
+    }
+  }
+  else
+  {
+    if (DEBUG)
+    {
+      Serial.println("Ingesting metrics: Failed to add sample" + String(ts.errmsg));
+    }
   }
 }
 
@@ -183,7 +202,11 @@ String performRemoteWrite()
     Serial.println(client.errmsg);
     return "error";
   }
-  ts1.resetSamples();
+  coffees_consumed.resetSamples();
+  system_memory_free_bytes.resetSamples();
+  system_memory_total_bytes.resetSamples();
+  system_network_wifi_rssi.resetSamples();
+  system_largest_heap_block_size_bytes.resetSamples();
   return "success";
 }
 
