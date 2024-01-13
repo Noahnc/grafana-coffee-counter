@@ -39,12 +39,13 @@ void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value);
 
 WriteRequest req(2, 1024);
 
+const char *labels = "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}";
 // TimeSeries that can hold 5 samples each. Make sure to set sample_ingestation rate and remote_write_interval accordingly
-TimeSeries coffees_consumed(5, "coffees_consumed_counter", "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}");
-TimeSeries system_memory_free_bytes(5, "system_memory_free_bytes", "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}");
-TimeSeries system_memory_total_bytes(5, "system_memory_total_bytes", "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}");
-TimeSeries system_network_wifi_rssi(5, "system_network_wifi_rssi", "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}");
-TimeSeries system_largest_heap_block_size_bytes(5, "system_largest_heap_block_size_bytes", "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}");
+TimeSeries coffees_consumed(5, "coffees_consumed_counter", labels);
+TimeSeries system_memory_free_bytes(5, "system_memory_free_bytes", labels);
+TimeSeries system_memory_total_bytes(5, "system_memory_total_bytes", labels);
+TimeSeries system_network_wifi_rssi(5, "system_network_wifi_rssi", labels);
+TimeSeries system_largest_heap_block_size_bytes(5, "system_largest_heap_block_size_bytes", labels);
 
 void setup()
 {
