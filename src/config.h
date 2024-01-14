@@ -19,8 +19,10 @@
 // Metrics Ingestion Rate
 #define METRICS_INGESTION_RATE_SECONDS 60
 
-// Duration in seconds for which motion has to be detected to count as a motion event
-#define MOTION_DETECTION_DURATION_SECONDS 5
+// Amount of time motion needs to be detected to count as a cup of small, medium or large coffee
+#define MOTION_DETECTION_DURATION_SECONDS_SMALL_COFFEE 10
+#define MOTION_DETECTION_DURATION_SECONDS_MEDIUM_COFFEE 18
+#define MOTION_DETECTION_DURATION_SECONDS_LARGE_COFFEE 30
 
 // Pin to which the vibration sensor is connected
 #define VIBRATION_SENSOR_PIN 36
