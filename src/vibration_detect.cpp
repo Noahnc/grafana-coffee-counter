@@ -2,7 +2,7 @@
 
 /// @brief Reads the vibration sensor an returns the duration of the detected vibration.
 /// @return Duration of detected vibration or -1 if threshold not reached.
-int64_t detect_vibration(hw_timer_t *timer, int32_t detection_threshold_ms)
+int64_t detect_vibration(hw_timer_t *timer)
 {
     timerWrite(timer, 0);
 
@@ -25,11 +25,7 @@ int64_t detect_vibration(hw_timer_t *timer, int32_t detection_threshold_ms)
         Serial.println("Vibration " + String(vibration_duration_ms));
     }
 
-    if (vibration_duration_ms >= detection_threshold_ms)
-    {
-        return vibration_duration_ms;
-    }
-    return -1;
+    return vibration_duration_ms;
 }
 
 void vibration_dection_task(void *args)
@@ -37,17 +33,35 @@ void vibration_dection_task(void *args)
     vibration_detection_parameters parameters = *(vibration_detection_parameters *)args;
     while (true)
     {
-        int64_t duration = detect_vibration(parameters.timer, parameters.detection_threshold_ms);
-        if (duration >= 0)
+        int64_t duration = detect_vibration(parameters.timer);
+        if (duration < parameters.detection_threshold_ms_small_coffee)
+        {
+            continue;
+        }
+        if (DEBUG)
         {
             Serial.println("Vibration detected (" + String(duration) + ")");
-            if (xSemaphoreTake(*parameters.vibration_counter_sem, portMAX_DELAY) == pdTRUE)
-            {
-                *(parameters.vibration_counter)+=1;
-                xSemaphoreGive(*parameters.vibration_counter_sem);
-            }
         }
-        vTaskDelay(50 / portTICK_PERIOD_MS);
+        if (xSemaphoreTake(*parameters.vibration_counter_sem, portMAX_DELAY) == pdTRUE)
+        {
+            if (duration >= parameters.detection_threshold_ms_large_coffee)
+            {
+                *(parameters.vibration_counter_large_coffee) += 1;
+            }
+            else if (duration >= parameters.detection_threshold_ms_medium_coffee)
+            {
+
+                *(parameters.vibration_counter_medium_coffee) += 1;
+            }
+            else if (duration >= parameters.detection_threshold_ms_small_coffee)
+            {
+
+                *(parameters.vibration_counter_small_coffee) += 1;
+            }
+            xSemaphoreGive(*parameters.vibration_counter_sem);
+
+            vTaskDelay(50 / portTICK_PERIOD_MS);
+        }
     }
 }
 
