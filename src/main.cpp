@@ -4,7 +4,7 @@
 #include <PrometheusArduino.h>
 #include <config.h>
 #include <tuple>
-
+#include <stdio.h>
 #include <vibration_detect.h>
 #include <transport.h>
 
@@ -34,12 +34,13 @@ void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value, String
 
 WriteRequest req(2, 1024);
 
-char *base_labels = "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG";
-char *labels = strcat(base_labels, "\"}");
+char *base_labels = "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"";
+char *labels = strcat(base_labels, "}");
+
 // TimeSeries that can hold 5 samples each. Make sure to set sample_ingestation rate and remote_write_interval accordingly
-TimeSeries coffees_consumed_small(5, "coffees_consumed_count_total", strcat(labels, ",coffee_size=\"small\"}"));
-TimeSeries coffees_consumed_medium(5, "coffees_consumed_count_total", strcat(labels, ",coffee_size=\"medium\"}"));
-TimeSeries coffees_consumed_large(5, "coffees_consumed_count_total", strcat(labels, ",coffee_size=\"large\"}"));
+TimeSeries coffees_consumed_small(5, "coffees_consumed_count_total", strcat(base_labels, ",coffee_size=\"small\"}"));
+TimeSeries coffees_consumed_medium(5, "coffees_consumed_count_total", strcat(base_labels, ",coffee_size=\"medium\"}"));
+TimeSeries coffees_consumed_large(5, "coffees_consumed_count_total", strcat(base_labels, ",coffee_size=\"large\"}"));
 TimeSeries system_memory_free_bytes(5, "system_memory_free_bytes", labels);
 TimeSeries system_memory_total_bytes(5, "system_memory_total_bytes", labels);
 TimeSeries system_network_wifi_rssi(5, "system_network_wifi_rssi", labels);
