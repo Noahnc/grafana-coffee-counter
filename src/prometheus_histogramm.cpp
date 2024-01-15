@@ -24,14 +24,21 @@ void Prometheus_Histogramm::init()
     for (int i = 0; i < bucket_count; i++)
     {
         this->bucket_values[i] = bucket_start + i * bucket_increment;
-        char bucket_labels[strlen(labels) + 20];
-        strcpy(bucket_labels, labels);
-        char bucket_label[20];
-        sprintf(bucket_label, ",le=\"%d\"", this->bucket_values[i]);
-        strcat(bucket_labels, bucket_label);
+
+        // Using std::string for safer string operations
+        std::string bucket_labels = labels;
+
+        // Find the position of the closing brace
+        size_t closing_brace_pos = bucket_labels.find_last_of('}');
+        if (closing_brace_pos != std::string::npos)
+        {
+            // Insert the new label before the closing brace
+            std::string new_label = ",le=" + std::to_string(this->bucket_values[i]);
+            bucket_labels.insert(closing_brace_pos, new_label);
+        }
 
         // Initialize the TimeSeries object for the current bucket
-        time_series_buckets[i] = new TimeSeries(series_size, name, bucket_labels);
+        time_series_buckets[i] = new TimeSeries(series_size, name, bucket_labels.c_str());
     }
     char time_series_count_name[strlen(name) + 6];
     char time_series_sum_name[strlen(name) + 4];
