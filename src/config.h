@@ -26,3 +26,6 @@
 #define VIBRATION_SENSOR_PIN 36
 // Pin connected to a LED to indicated that vibration is detected
 #define VIBRATION_DETECTION_LED_VCC 25
+
+// Pin to indicate WIFI status
+#define WIFI_STATUS_LED_VCC 26

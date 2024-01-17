@@ -3,19 +3,17 @@
 #include <PromLokiTransport.h>
 #include <PrometheusArduino.h>
 #include <config.h>
-#include <certificates.h>
 #include <tuple>
 
 #ifdef heltec_wifi_kit32
 #include "heltec.h"
 #endif
 
-#include "vibration_detect.h"
+#include <vibration_detect.h>
+#include <transport.h>
 
-PromLokiTransport transport;
-PromClient client(transport);
+Transport transport(WIFI_STATUS_LED_VCC, WIFI_SSID, WIFI_PASSWORD);
 
-String wifi_status;
 int64_t coffee_count_total = 0;
 int64_t current_time = 0;
 int64_t last_metric_ingestion = 0;
@@ -57,6 +55,7 @@ void setup()
 
   pinMode(VIBRATION_SENSOR_PIN, INPUT);
   pinMode(VIBRATION_DETECTION_LED_VCC, OUTPUT);
+  pinMode(WIFI_STATUS_LED_VCC, OUTPUT);
 
   // setup background task for vibration detection
   timer0 = timerBegin(0, 80, true);
@@ -77,36 +76,14 @@ void setup()
   Heltec.display->display();
 #endif
 
-  transport.setUseTls(true);
-  transport.setCerts(grafanaCert, strlen(grafanaCert));
-  transport.setWifiSsid(WIFI_SSID);
-  transport.setWifiPass(WIFI_PASSWORD);
-  transport.setDebug(Serial); // Remove this line to disable debug logging of the client.
-  if (!transport.begin())
-  {
-    Serial.println(transport.errmsg);
-    while (true)
-    {
-    };
-  }
-
-  // Configure the client
-  client.setUrl(GC_URL);
-  client.setPath((char *)GC_PATH);
-  client.setPort(GC_PORT);
-  client.setUser(GC_USER);
-  client.setPass(GC_PASS);
+  // setup transportation
+  transport.setEndpoint(GC_PORT, GC_URL, (char *)GC_PATH);
+  transport.setCredentials(GC_USER, GC_PASS);
   if (DEBUG)
   {
-    client.setDebug(Serial);
+    transport.setDebug(Serial);
   }
-  if (!client.begin())
-  {
-    Serial.println(client.errmsg);
-    while (true)
-    {
-    };
-  }
+  transport.beginAsync();
 
   req.addTimeSeries(coffees_consumed);
   req.addTimeSeries(system_memory_free_bytes);
@@ -116,9 +93,9 @@ void setup()
   if (DEBUG)
     Serial.println("Startup done");
 
-  current_time = transport.getTimeMillis();
-  last_metric_ingestion = current_time;
-  last_remote_write = current_time;
+  current_time = 0;
+  last_metric_ingestion = 0;
+  last_remote_write = 0;
 
 #ifdef heltec_wifi_kit32
   Heltec.display->clear();
@@ -132,9 +109,6 @@ void loop()
 
   handleSampleIngestion();
   handleMetricsSend();
-
-  // Check if the wifi connection is still up and reconnect if necessary
-  transport.checkAndReconnectConnection();
 
   // Update the display
   updateDisplay();
@@ -196,10 +170,9 @@ void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value)
 String performRemoteWrite()
 {
   Serial.println("Performing remote write");
-  PromClient::SendResult res = client.send(req);
+  PromClient::SendResult res = transport.send(req);
   if (!res == PromClient::SendResult::SUCCESS)
   {
-    Serial.println(client.errmsg);
     return "error";
   }
   coffees_consumed.resetSamples();
