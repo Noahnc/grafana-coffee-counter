@@ -13,6 +13,21 @@ Transport::Transport(const int wifi_status_pin, const char *wifi_ssid, const cha
     xSemaphoreGive(semaphore);
 }
 
+Transport::~Transport(){
+    if (connectTaskHandle != NULL){
+        vTaskDelete(connectTaskHandle);
+    }
+    if (blinkTaskHandle != NULL)
+    {
+        vTaskDelete(blinkTaskHandle);
+        blinkTaskHandle = NULL;
+    }
+    delete &promClient;
+    delete &promTransport;
+    vSemaphoreDelete(semaphore);
+    digitalWrite(wifiStatusPin, LOW);
+}
+
 void Transport::setDebug(Stream &stream)
 {
     promTransport.setDebug(stream);
@@ -95,7 +110,7 @@ void Transport::connectTask(void *args)
         {
             if (!instance->transportInitialized)
             {
-                instance->startLedBlink();
+                instance->startLedBlink(StatusIndicator::Connecting);
                 if (!instance->promTransport.begin())
                 {
                     Serial.println(instance->promTransport.errmsg);
@@ -113,30 +128,47 @@ void Transport::connectTask(void *args)
             vTaskDelay(2000 / portTICK_PERIOD_MS);
         }
 
-        // update led
-        instance->stopLedBlink();
-        digitalWrite(instance->wifiStatusPin, (WiFi.status() == WL_CONNECTED ? HIGH : LOW));
-
-        // reconnect
-        instance->promTransport.checkAndReconnectConnection();
+        // update LED status and try to reconnect if required
+        wl_status_t wifiStatus = WiFi.status();
+        if (wifiStatus == WL_CONNECTED)
+        {
+            int8_t dbm = WiFi.RSSI();
+            instance->debug->println("Wifi Signal: " + String(dbm) + "dBm");
+            if(dbm > -70){
+                // good/fair connection
+                instance->stopLedBlink();
+                digitalWrite(instance->wifiStatusPin, HIGH);
+            }
+            else {
+                // bad connection
+                instance->startLedBlink(StatusIndicator::ConnectedBadSignal);
+            }
+        }
+        else
+        {
+            instance->startLedBlink(StatusIndicator::Connecting);
+            instance->promTransport.checkAndReconnectConnection();
+        }
         vTaskDelay(5000 / portTICK_PERIOD_MS);
     }
 }
 
-void Transport::startLedBlink()
+void Transport::startLedBlink(StatusIndicator statusIndicator)
 {
-    if (blinkTaskHandle == NULL)
+    blinkIntervalMs = static_cast<int>(statusIndicator);
+    if (blinkTaskHandle != NULL)
     {
-        Serial.println("startLedBlink");
-        xTaskCreatePinnedToCore(
-            blinkLedTask,
-            "Wifi LED blink",
-            10000, /* Stack size in words */
-            this,
-            1, /* Priority of the task */
-            &blinkTaskHandle,
-            tskNO_AFFINITY);
+        // blink task already running
+        return;
     }
+    xTaskCreatePinnedToCore(
+        blinkLedTask,
+        "Wifi LED blink",
+        10000, /* Stack size in words */
+        this,
+        1, /* Priority of the task */
+        &blinkTaskHandle,
+        tskNO_AFFINITY);
 }
 
 void Transport::stopLedBlink()
@@ -154,8 +186,8 @@ void Transport::blinkLedTask(void *args)
     while (true)
     {
         digitalWrite(instance->wifiStatusPin, HIGH);
-        vTaskDelay(200 / portTICK_PERIOD_MS);
+        vTaskDelay(instance->blinkIntervalMs / portTICK_PERIOD_MS);
         digitalWrite(instance->wifiStatusPin, LOW);
-        vTaskDelay(200 / portTICK_PERIOD_MS);
+        vTaskDelay(instance->blinkIntervalMs / portTICK_PERIOD_MS);
     }
 }

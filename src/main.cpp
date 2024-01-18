@@ -47,15 +47,16 @@ TimeSeries system_largest_heap_block_size_bytes(5, "system_largest_heap_block_si
 
 void setup()
 {
-  Serial.begin(SERIAL_BAUD);
-  while (!Serial)
-    ;
-  Serial.println("Starting up coffe counter ...");
-  Serial.println("WiFi SSID: " + String(WIFI_SSID));
-
   pinMode(VIBRATION_SENSOR_PIN, INPUT);
   pinMode(VIBRATION_DETECTION_LED_VCC, OUTPUT);
   pinMode(WIFI_STATUS_LED_VCC, OUTPUT);
+
+  Serial.begin(SERIAL_BAUD);
+  while (!Serial)
+    ;
+
+  Serial.println("Starting up coffe counter ...");
+  Serial.println("WiFi SSID: " + String(WIFI_SSID));
 
   // setup background task for vibration detection
   timer0 = timerBegin(0, 80, true);
