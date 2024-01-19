@@ -74,9 +74,33 @@ void setup()
   parameters.vibration_counter_large_coffee = &large_coffee_count;
   create_vibration_dection_task(&vibration_detection_task, &parameters);
 
-  // setup transportation
-  transport.setEndpoint(GC_PORT, GC_URL, (char *)GC_PATH);
-  transport.setCredentials(GC_USER, GC_PASS);
+#ifdef heltec_wifi_kit32
+  Heltec.begin(true, false, true, true, 915E6);
+  Heltec.display->setContrast(255);
+  Heltec.display->clear();
+  Heltec.display->drawString(0, 0, "Booting ...");
+  Heltec.display->display();
+#endif
+
+  transport.setUseTls(true);
+  transport.setCerts(grafanaCert, strlen(grafanaCert));
+  transport.setWifiSsid(WIFI_SSID);
+  transport.setWifiPass(WIFI_PASSWORD);
+  transport.setDebug(Serial); // Remove this line to disable debug logging of the client.
+  if (!transport.begin())
+  {
+    Serial.println(transport.errmsg);
+    while (true)
+    {
+    };
+  }
+
+  // Configure the client
+  client.setUrl(GC_URL);
+  client.setPath((char *)GC_PATH);
+  client.setPort(GC_PORT);
+  client.setUser(GC_USER);
+  client.setPass(GC_PASS);
   if (DEBUG)
   {
     transport.setDebug(Serial);
@@ -93,9 +117,14 @@ void setup()
   if (DEBUG)
     Serial.println("Startup done");
 
-  current_time = 0;
-  last_metric_ingestion = 0;
-  last_remote_write = 0;
+  current_time = transport.getTimeMillis();
+  last_metric_ingestion = current_time;
+  last_remote_write = current_time;
+
+#ifdef heltec_wifi_kit32
+  Heltec.display->clear();
+  Heltec.display->drawString(0, 0, "Startup done");
+#endif
 };
 
 void loop()
@@ -104,6 +133,12 @@ void loop()
 
   handleSampleIngestion();
   handleMetricsSend();
+
+  // Check if the wifi connection is still up and reconnect if necessary
+  transport.checkAndReconnectConnection();
+
+  // Update the display
+  updateDisplay();
 
   vTaskDelay(50 / portTICK_PERIOD_MS);
 }
@@ -162,7 +197,8 @@ bool performRemoteWrite()
   PromClient::SendResult res = transport.send(req);
   if (!res == PromClient::SendResult::SUCCESS)
   {
-    return false;
+    Serial.println(client.errmsg);
+    return "error";
   }
   coffees_consumed_small.resetSamples();
   coffees_consumed_medium.resetSamples();
