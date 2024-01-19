@@ -58,7 +58,7 @@ BaseType_t create_vibration_dection_task(TaskHandle_t *task_handle, vibration_de
         "vibration detection",
         10000, /* Stack size in words */
         parameter,
-        1, /* Priority of the task */
+        3, /* Priority of the task */
         task_handle,
         tskNO_AFFINITY);
 }
