@@ -19,7 +19,7 @@ Prometheus_Histogramm::Prometheus_Histogramm(char *name, char *labels, int16_t s
     }
 }
 
-void Prometheus_Histogramm::init()
+void Prometheus_Histogramm::init(WriteRequest *req)
 {
     for (int i = 0; i < bucket_count; i++)
     {
@@ -49,6 +49,7 @@ void Prometheus_Histogramm::init()
 
         // Initialize the TimeSeries object for the current bucket
         time_series_buckets[i] = new TimeSeries(series_size, name, bucket_labels.c_str());
+        req->addTimeSeries(*time_series_buckets[i]);
     }
     char time_series_count_name[strlen(name) + 6];
     char time_series_sum_name[strlen(name) + 4];
@@ -57,7 +58,9 @@ void Prometheus_Histogramm::init()
     strcat(time_series_count_name, "_count");
     strcat(time_series_sum_name, "_sum");
     time_series_count = TimeSeries(series_size, time_series_count_name, labels);
+    req->addTimeSeries(time_series_count);
     time_series_sum = TimeSeries(series_size, time_series_sum_name, labels);
+    req->addTimeSeries(time_series_sum);
 }
 
 void Prometheus_Histogramm::AddValue(int16_t value)
@@ -90,4 +93,14 @@ void Prometheus_Histogramm::Ingest(int64_t timestamp)
     }
     time_series_sum.addSample(timestamp, sum);
     time_series_count.addSample(timestamp, sum);
+}
+
+void Prometheus_Histogramm::resetSamples()
+{
+    for (int i = 0; i < bucket_count; i++)
+    {
+        time_series_buckets[i]->resetSamples();
+    }
+    time_series_sum.resetSamples();
+    time_series_count.resetSamples();
 }

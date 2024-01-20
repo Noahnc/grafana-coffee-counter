@@ -24,9 +24,11 @@ private:
 
 public:
     Prometheus_Histogramm(char *name, char *labels, int16_t series_size, int16_t bucket_start, int16_t bucket_increment, int16_t bucket_count);
-    void init();
+    void init(WriteRequest *req);
     void AddValue(int16_t value);
     void Ingest(int64_t timestamp);
+    void resetSamples();
+    void associateWriteRequest(WriteRequest *req);
 };
 
 #endif
