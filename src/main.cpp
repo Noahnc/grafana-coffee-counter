@@ -8,7 +8,7 @@
 #include <cstring>
 #include <vibration_detect.h>
 #include <transport.h>
-#include "prometheus_histogramm.h"
+#include <prometheus_histogramm.h>
 
 Transport transport(WIFI_STATUS_LED_VCC, WIFI_SSID, WIFI_PASSWORD);
 
@@ -39,10 +39,7 @@ WriteRequest req(2, 1024);
 char *labels = "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}";
 
 // TimeSeries that can hold 5 samples each. Make sure to set sample_ingestation rate and remote_write_interval accordingly
-TimeSeries coffees_consumed_small(5, "coffees_consumed_count_total", "job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\",coffee_size=\"small\"}");
-TimeSeries coffees_consumed_medium(5, "coffees_consumed_count_total", "job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\",coffee_size=\"medium\"}");
-TimeSeries coffees_consumed_large(5, "coffees_consumed_count_total", "job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\",coffee_size=\"large\"}");
-Prometheus_Histogramm coffees_consumed("coffees_consumed_count_total", labels, 5, 10, 4, 10);
+Prometheus_Histogramm coffees_consumed("coffees_consumed", labels, 5, 10, 4, 10);
 TimeSeries system_memory_free_bytes(5, "system_memory_free_bytes", labels);
 TimeSeries system_memory_total_bytes(5, "system_memory_total_bytes", labels);
 TimeSeries system_network_wifi_rssi(5, "system_network_wifi_rssi", labels);
@@ -65,53 +62,23 @@ void setup()
   timer0 = timerBegin(0, 80, true);
   coffee_counters_sem = xSemaphoreCreateBinary();
   xSemaphoreGive(coffee_counters_sem);
+  coffees_consumed.init(&req);
   vibration_detection_parameters parameters;
-  parameters.detection_threshold_ms_small_coffee = MOTION_DETECTION_DURATION_SECONDS_SMALL_COFFEE * 1000;
-  parameters.detection_threshold_ms_medium_coffee = MOTION_DETECTION_DURATION_SECONDS_MEDIUM_COFFEE * 1000;
-  parameters.detection_threshold_ms_large_coffee = MOTION_DETECTION_DURATION_SECONDS_LARGE_COFFEE * 1000;
+  parameters.vibration_detection_threshold_ms = MOTION_DETECTION_DURATION_THREASHOLD_SECONDS * 1000;
   parameters.timer = timer0;
   parameters.vibration_counter_sem = &coffee_counters_sem;
-  parameters.vibration_counter_small_coffee = &small_coffee_count;
-  parameters.vibration_counter_medium_coffee = &medium_coffee_count;
-  parameters.vibration_counter_large_coffee = &large_coffee_count;
+  parameters.coffees_consumed = &coffees_consumed;
   create_vibration_dection_task(&vibration_detection_task, &parameters);
 
-#ifdef heltec_wifi_kit32
-  Heltec.begin(true, false, true, true, 915E6);
-  Heltec.display->setContrast(255);
-  Heltec.display->clear();
-  Heltec.display->drawString(0, 0, "Booting ...");
-  Heltec.display->display();
-#endif
-
-  transport.setUseTls(true);
-  transport.setCerts(grafanaCert, strlen(grafanaCert));
-  transport.setWifiSsid(WIFI_SSID);
-  transport.setWifiPass(WIFI_PASSWORD);
-  transport.setDebug(Serial); // Remove this line to disable debug logging of the client.
-  if (!transport.begin())
-  {
-    Serial.println(transport.errmsg);
-    while (true)
-    {
-    };
-  }
-
-  // Configure the client
-  client.setUrl(GC_URL);
-  client.setPath((char *)GC_PATH);
-  client.setPort(GC_PORT);
-  client.setUser(GC_USER);
-  client.setPass(GC_PASS);
+  // setup transportation
+  transport.setEndpoint(GC_PORT, GC_URL, (char *)GC_PATH);
+  transport.setCredentials(GC_USER, GC_PASS);
   if (DEBUG)
   {
     transport.setDebug(Serial);
   }
   transport.beginAsync();
 
-  req.addTimeSeries(coffees_consumed_small);
-  req.addTimeSeries(coffees_consumed_medium);
-  req.addTimeSeries(coffees_consumed_large);
   req.addTimeSeries(system_memory_free_bytes);
   req.addTimeSeries(system_memory_total_bytes);
   req.addTimeSeries(system_network_wifi_rssi);
@@ -119,14 +86,9 @@ void setup()
   if (DEBUG)
     Serial.println("Startup done");
 
-  current_time = transport.getTimeMillis();
-  last_metric_ingestion = current_time;
-  last_remote_write = current_time;
-
-#ifdef heltec_wifi_kit32
-  Heltec.display->clear();
-  Heltec.display->drawString(0, 0, "Startup done");
-#endif
+  current_time = 0;
+  last_metric_ingestion = 0;
+  last_remote_write = 0;
 };
 
 void loop()
@@ -135,12 +97,6 @@ void loop()
 
   handleSampleIngestion();
   handleMetricsSend();
-
-  // Check if the wifi connection is still up and reconnect if necessary
-  transport.checkAndReconnectConnection();
-
-  // Update the display
-  updateDisplay();
 
   vTaskDelay(50 / portTICK_PERIOD_MS);
 }
@@ -166,9 +122,7 @@ void handleSampleIngestion()
   }
   if (xSemaphoreTake(coffee_counters_sem, (TickType_t)10) == pdTRUE)
   {
-    ingestMetricSample(coffees_consumed_small, current_time, small_coffee_count, "small_coffee_count");
-    ingestMetricSample(coffees_consumed_medium, current_time, medium_coffee_count, "medium_coffee_count");
-    ingestMetricSample(coffees_consumed_large, current_time, large_coffee_count, "large_coffee_count");
+    coffees_consumed.Ingest(current_time);
 
     xSemaphoreGive(coffee_counters_sem);
   }
@@ -199,12 +153,9 @@ bool performRemoteWrite()
   PromClient::SendResult res = transport.send(req);
   if (!res == PromClient::SendResult::SUCCESS)
   {
-    Serial.println(client.errmsg);
-    return "error";
+    return false;
   }
-  coffees_consumed_small.resetSamples();
-  coffees_consumed_medium.resetSamples();
-  coffees_consumed_large.resetSamples();
+  coffees_consumed.resetSamples();
   system_memory_free_bytes.resetSamples();
   system_memory_total_bytes.resetSamples();
   system_network_wifi_rssi.resetSamples();
