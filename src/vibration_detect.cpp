@@ -33,18 +33,18 @@ void vibration_dection_task(void *args)
     vibration_detection_parameters parameters = *(vibration_detection_parameters *)args;
     while (true)
     {
-        int64_t duration = detect_vibration(parameters.timer);
-        if (duration < parameters.vibration_detection_threshold_ms)
+        int64_t duration_ms = detect_vibration(parameters.timer);
+        if (duration_ms < parameters.vibration_detection_threshold_ms)
         {
             continue;
         }
         if (DEBUG)
         {
-            Serial.println("Vibration detected (" + String(duration) + ")");
+            Serial.println("Vibration detected (" + String(duration_ms) + ")");
         }
         if (xSemaphoreTake(*parameters.vibration_counter_sem, portMAX_DELAY) == pdTRUE)
         {
-            parameters.coffees_consumed->AddValue(duration);
+            parameters.coffees_consumed->AddValue(duration_ms);
             xSemaphoreGive(*parameters.vibration_counter_sem);
 
             vTaskDelay(50 / portTICK_PERIOD_MS);
