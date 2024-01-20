@@ -31,8 +31,8 @@ void handleSampleIngestion();
 void handleMetricsSend();
 void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value, String name);
 
-// The write request that will be used to send the metrics to Prometheus. For every Histogramm you need to add 2 + number of buckets timeseries
-WriteRequest req(18, 9216);
+// The write request that will be used to send the metrics to Prometheus. For every Histogramm you need to add 3 + number of buckets timeseries
+WriteRequest req(10, 4096);
 
 char *labels = "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}";
 
@@ -63,7 +63,7 @@ void setup()
   xSemaphoreGive(coffee_counters_sem);
 
   // init coffees_consumed histogramm
-  coffees_consumed.init(&req);
+  coffees_consumed.init(req);
 
   // setup vibration detection task with parameters
   vibration_detection_parameters parameters;
@@ -78,6 +78,7 @@ void setup()
   transport.setCredentials(GC_USER, GC_PASS);
   if (DEBUG)
   {
+    req.setDebug(Serial);
     transport.setDebug(Serial);
   }
   transport.beginAsync();
@@ -104,7 +105,7 @@ void loop()
   handleSampleIngestion();
   handleMetricsSend();
 
-  vTaskDelay(2000 / portTICK_PERIOD_MS);
+  vTaskDelay(4000 / portTICK_PERIOD_MS);
 }
 
 void handleMetricsSend()
@@ -135,7 +136,6 @@ void handleSampleIngestion()
       Serial.println("Next metric ingestion in " + String(next_ingestion_ms / 1000) + " seconds");
     return;
   }
-
   if (DEBUG)
     Serial.println("Ingesting metrics");
 
@@ -168,7 +168,6 @@ void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value, String
 
 bool performRemoteWrite()
 {
-  Serial.println("Performing remote write");
   PromClient::SendResult res = transport.send(req);
   if (!res == PromClient::SendResult::SUCCESS)
   {
