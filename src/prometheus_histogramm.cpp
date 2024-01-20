@@ -24,6 +24,7 @@ void Prometheus_Histogramm::init(WriteRequest *req)
     for (int i = 0; i < bucket_count; i++)
     {
         this->bucket_values[i] = bucket_start + i * bucket_increment;
+        this->bucket_counters[i] = 0;
 
         // Using std::string for safer string operations
         std::string bucket_labels = labels;
