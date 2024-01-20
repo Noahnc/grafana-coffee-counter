@@ -8,6 +8,7 @@
 #include <cstring>
 #include <vibration_detect.h>
 #include <transport.h>
+#include "prometheus_histogramm.h"
 
 Transport transport(WIFI_STATUS_LED_VCC, WIFI_SSID, WIFI_PASSWORD);
 
@@ -41,6 +42,7 @@ char *labels = "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}";
 TimeSeries coffees_consumed_small(5, "coffees_consumed_count_total", "job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\",coffee_size=\"small\"}");
 TimeSeries coffees_consumed_medium(5, "coffees_consumed_count_total", "job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\",coffee_size=\"medium\"}");
 TimeSeries coffees_consumed_large(5, "coffees_consumed_count_total", "job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\",coffee_size=\"large\"}");
+Prometheus_Histogramm coffees_consumed("coffees_consumed_count_total", labels, 5, 10, 4, 10);
 TimeSeries system_memory_free_bytes(5, "system_memory_free_bytes", labels);
 TimeSeries system_memory_total_bytes(5, "system_memory_total_bytes", labels);
 TimeSeries system_network_wifi_rssi(5, "system_network_wifi_rssi", labels);
