@@ -46,9 +46,8 @@ void vibration_dection_task(void *args)
         {
             parameters.coffees_consumed->AddValue(duration_ms);
             xSemaphoreGive(*parameters.vibration_counter_sem);
-
-            vTaskDelay(50 / portTICK_PERIOD_MS);
         }
+        vTaskDelay(50 / portTICK_PERIOD_MS);
     }
 }
 
