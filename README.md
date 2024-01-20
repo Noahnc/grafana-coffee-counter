@@ -2,6 +2,11 @@
 
 ToDo: Add documentation
 
+Hardware:
+* https://wiki.dfrobot.com/Vibration_Sensor_SKU_SEN0433
+* ESP32 WROVER-E
+* Custom PCB
+
 ## Secrets
 
 Das Projekt benötigt folgende Secrets, die in einer Datei `user_config.ini` im Projektverzeichnis abgelegt oder als Umgebungsvariable definiert werden müssen:
@@ -23,7 +28,7 @@ Ein Schema- und PCB-Design für das Projekt befinden sich im Verzeichnis `./easy
 
 Der im Schema unter `./easy_eda` verwendete USB-to-UART-Chip `CP2102N` wird über das [Simplicity Studio Software](https://www.silabs.com/developers/simplicity-studio) von Silicon Labs konfiguriert.
 
-In `./cp2102n_configuration` befindet sich eine Konfigurationsdatei, die mit Simplicity Studio Software auf den Chip gespielt werden kann, um die GPIO-Konfiguration für die LED `TXT` und `RXT` zu setzen und Device Informationen für das USB Protokoll zu setzen. Siehe auch [Application Node AN721](https://www.silabs.com/documents/public/application-notes/AN721.pdf) für eine Anleitung.
+In `./cp2102n_configuration` befindet sich eine Konfigurationsdatei, die mit Simplicity Studio Software auf den Chip gespielt werden kann, um die GPIO-Konfiguration für die LED `TXT` und `RXT` zu setzen und Device Informationen für das USB Protokoll zu setzen. Siehe auch [Application Note AN721](https://www.silabs.com/documents/public/application-notes/AN721.pdf) für eine Anleitung.
 
 Unter Linux ist es möglicherweise erforderlich, bei einigen Dateien das Execute-Flag von Hand zu setzen:
 
