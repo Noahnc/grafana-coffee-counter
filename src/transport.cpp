@@ -92,7 +92,7 @@ void Transport::beginAsync()
     xTaskCreatePinnedToCore(
         Transport::connectTask,
         "transport connect",
-        10000, /* Stack size in words */
+        20000, /* Stack size in words */
         this,
         3, /* Priority of the task */
         &connectTaskHandle,
