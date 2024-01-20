@@ -3,21 +3,19 @@
 
 #include "config.h"
 #include <Arduino.h>
+#include <prometheus_histogramm.h>
 
 typedef struct
 {
     /// @brief Timer to use for time measuring.
     hw_timer_t *timer;
     /// @brief Minimum vibration detection time in ms for the differnet coffee types.
-    int32_t detection_threshold_ms_small_coffee;
-    int32_t detection_threshold_ms_medium_coffee;
-    int32_t detection_threshold_ms_large_coffee;
+    int32_t vibration_detection_threshold_ms;
     /// @brief Semaphore that must be taken to update the counter.
     SemaphoreHandle_t *vibration_counter_sem;
     /// @brief Counter to increase for the different coffee types.
-    int64_t *vibration_counter_small_coffee;
-    int64_t *vibration_counter_medium_coffee;
-    int64_t *vibration_counter_large_coffee;
+    Prometheus_Histogramm *coffees_consumed;
+
 } vibration_detection_parameters;
 
 BaseType_t create_vibration_dection_task(TaskHandle_t *task_handle, vibration_detection_parameters *parameter);

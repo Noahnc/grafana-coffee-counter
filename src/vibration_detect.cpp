@@ -34,7 +34,7 @@ void vibration_dection_task(void *args)
     while (true)
     {
         int64_t duration = detect_vibration(parameters.timer);
-        if (duration < parameters.detection_threshold_ms_small_coffee)
+        if (duration < parameters.vibration_detection_threshold_ms)
         {
             continue;
         }
@@ -44,20 +44,7 @@ void vibration_dection_task(void *args)
         }
         if (xSemaphoreTake(*parameters.vibration_counter_sem, portMAX_DELAY) == pdTRUE)
         {
-            if (duration >= parameters.detection_threshold_ms_large_coffee)
-            {
-                *(parameters.vibration_counter_large_coffee) += 1;
-            }
-            else if (duration >= parameters.detection_threshold_ms_medium_coffee)
-            {
-
-                *(parameters.vibration_counter_medium_coffee) += 1;
-            }
-            else if (duration >= parameters.detection_threshold_ms_small_coffee)
-            {
-
-                *(parameters.vibration_counter_small_coffee) += 1;
-            }
+            parameters.coffees_consumed->AddValue(duration);
             xSemaphoreGive(*parameters.vibration_counter_sem);
 
             vTaskDelay(50 / portTICK_PERIOD_MS);
