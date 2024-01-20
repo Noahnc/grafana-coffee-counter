@@ -13,10 +13,10 @@
 Transport transport(WIFI_STATUS_LED_VCC, WIFI_SSID, WIFI_PASSWORD);
 
 // Setup time variables
-int64_t start_time;
-int64_t current_time;
-int64_t last_metric_ingestion;
-int64_t last_remote_write;
+int64_t start_time_unix_ms = 0;
+int64_t current_cicle_start_time_unix_ms = 0;
+int64_t last_metric_ingestion_unix_ms = 0;
+int64_t last_remote_write_unix_ms = 0;
 
 // timer 0 of esp32 for vibration detection
 hw_timer_t *timer0 = NULL;
@@ -26,36 +26,28 @@ TaskHandle_t vibration_detection_task;
 SemaphoreHandle_t coffee_counters_sem;
 
 // Function prototypes
-bool detectMotion();
 bool performRemoteWrite();
-bool handleMotionBuffer();
 void handleSampleIngestion();
 void handleMetricsSend();
 void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value, String name);
 
 // The write request that will be used to send the metrics to Prometheus. For every Histogramm you need to add 2 + number of buckets timeseries
-WriteRequest req(16, 8192);
+WriteRequest req(18, 9216);
 
 char *labels = "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}";
 
 // TimeSeries that can hold 5 samples each. Make sure to set sample_ingestation rate and remote_write_interval accordingly
-Prometheus_Histogramm coffees_consumed("coffees_consumed", labels, 10, 10000, 4000, 10);
-TimeSeries system_memory_free_bytes(10, "system_memory_free_bytes", labels);
-TimeSeries system_memory_total_bytes(10, "system_memory_total_bytes", labels);
-TimeSeries system_network_wifi_rssi(10, "system_network_wifi_rssi", labels);
-TimeSeries system_largest_heap_block_size_bytes(10, "system_largest_heap_block_size_bytes", labels);
+Prometheus_Histogramm coffees_consumed("coffees_consumed", labels, 5, 10000, 4000, 10);
+TimeSeries system_memory_free_bytes(5, "system_memory_free_bytes", labels);
+TimeSeries system_memory_total_bytes(5, "system_memory_total_bytes", labels);
+TimeSeries system_network_wifi_rssi(5, "system_network_wifi_rssi", labels);
+TimeSeries system_largest_heap_block_size_bytes(5, "system_largest_heap_block_size_bytes", labels);
 
 void setup()
 {
   pinMode(VIBRATION_SENSOR_PIN, INPUT);
   pinMode(VIBRATION_DETECTION_LED_VCC, OUTPUT);
   pinMode(WIFI_STATUS_LED_VCC, OUTPUT);
-
-  // Set all time variables to the current startup time
-  start_time = transport.getTimeMillis();
-  current_time = start_time;
-  last_metric_ingestion = start_time;
-  last_remote_write = start_time;
 
   // Setup serial
   Serial.begin(SERIAL_BAUD);
@@ -96,52 +88,68 @@ void setup()
   req.addTimeSeries(system_network_wifi_rssi);
   req.addTimeSeries(system_largest_heap_block_size_bytes);
 
+  // Set all time variables to the current startup time
+  start_time_unix_ms = transport.getTimeMillis();
+  last_metric_ingestion_unix_ms = start_time_unix_ms;
+  last_remote_write_unix_ms = start_time_unix_ms;
+
   if (DEBUG)
     Serial.println("Startup done");
 };
 
 void loop()
 {
-  current_time = transport.getTimeMillis();
+  current_cicle_start_time_unix_ms = transport.getTimeMillis();
 
   handleSampleIngestion();
-  // handleMetricsSend();
+  handleMetricsSend();
 
-  vTaskDelay(50 / portTICK_PERIOD_MS);
+  vTaskDelay(2000 / portTICK_PERIOD_MS);
 }
 
 void handleMetricsSend()
 {
-  if ((current_time - last_remote_write) > (REMOTE_WRITE_INTERVAL_SECONDS * 1000))
+  int64_t next_remote_write_ms = last_remote_write_unix_ms + (REMOTE_WRITE_INTERVAL_SECONDS * 1000) - current_cicle_start_time_unix_ms;
+  if (next_remote_write_ms > 0)
   {
     if (DEBUG)
-      Serial.println("Performing remote write");
-    bool success = performRemoteWrite();
-    if (DEBUG)
-      Serial.println("Remote Write successfull: " + String(success));
-    last_remote_write = transport.getTimeMillis();
+      Serial.println("Next remote write in " + String(next_remote_write_ms / 1000) + " seconds");
+    return;
   }
+
+  if (DEBUG)
+    Serial.println("Performing remote write");
+
+  bool success = performRemoteWrite();
+  if (DEBUG)
+    Serial.println("Remote Write successfull: " + String(success));
+  last_remote_write_unix_ms = transport.getTimeMillis();
 }
 
 void handleSampleIngestion()
 {
-  if ((current_time - last_metric_ingestion) <= (METRICS_INGESTION_RATE_SECONDS * 1000))
+  int64_t next_ingestion_ms = last_metric_ingestion_unix_ms + (METRICS_INGESTION_RATE_SECONDS * 1000) - current_cicle_start_time_unix_ms;
+  if (next_ingestion_ms > 0)
   {
+    if (DEBUG)
+      Serial.println("Next metric ingestion in " + String(next_ingestion_ms / 1000) + " seconds");
     return;
   }
+
   if (DEBUG)
     Serial.println("Ingesting metrics");
+
   if (xSemaphoreTake(coffee_counters_sem, (TickType_t)10) == pdTRUE)
   {
-    coffees_consumed.Ingest(current_time);
+    coffees_consumed.Ingest(current_cicle_start_time_unix_ms);
 
     xSemaphoreGive(coffee_counters_sem);
   }
-  ingestMetricSample(system_memory_free_bytes, current_time, ESP.getFreeHeap(), "free_heap_bytes");
-  ingestMetricSample(system_memory_total_bytes, current_time, ESP.getHeapSize(), "total_heap_bytes");
-  ingestMetricSample(system_network_wifi_rssi, current_time, WiFi.RSSI(), "wifi_rssi");
-  ingestMetricSample(system_largest_heap_block_size_bytes, current_time, ESP.getMaxAllocHeap(), "largest_heap_block_bytes");
-  last_metric_ingestion = transport.getTimeMillis();
+  ingestMetricSample(system_memory_free_bytes, current_cicle_start_time_unix_ms, ESP.getFreeHeap(), "free_heap_bytes");
+  ingestMetricSample(system_memory_total_bytes, current_cicle_start_time_unix_ms, ESP.getHeapSize(), "total_heap_bytes");
+  ingestMetricSample(system_network_wifi_rssi, current_cicle_start_time_unix_ms, WiFi.RSSI(), "wifi_rssi");
+  ingestMetricSample(system_largest_heap_block_size_bytes, current_cicle_start_time_unix_ms, ESP.getMaxAllocHeap(), "largest_heap_block_bytes");
+  last_metric_ingestion_unix_ms = transport.getTimeMillis();
 }
 
 void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value, String name)
