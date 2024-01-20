@@ -12,9 +12,6 @@
 
 Transport transport(WIFI_STATUS_LED_VCC, WIFI_SSID, WIFI_PASSWORD);
 
-int64_t small_coffee_count = 0;
-int64_t medium_coffee_count = 0;
-int64_t large_coffee_count = 0;
 int64_t current_time = 0;
 int64_t last_metric_ingestion = 0;
 int64_t last_remote_write = 0;
