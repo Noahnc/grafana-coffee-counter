@@ -40,7 +40,7 @@ void vibration_dection_task(void *args)
         }
         if (DEBUG)
         {
-            Serial.println("Vibration detected (" + String(duration_ms) + ")");
+            Serial.println("Vibration detected (" + String(duration_ms) + " ms)");
         }
         if (xSemaphoreTake(*parameters.vibration_counter_sem, portMAX_DELAY) == pdTRUE)
         {
