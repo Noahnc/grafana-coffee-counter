@@ -20,7 +20,7 @@ int64_t detect_vibration(hw_timer_t *timer)
 
     int64_t vibration_duration_ms = timerReadMilis(timer);
 
-    if (DEBUG && vibration_duration_ms > 1)
+    if (DEBUG && vibration_duration_ms > 1000)
     {
         Serial.println("Vibration " + String(vibration_duration_ms));
     }
