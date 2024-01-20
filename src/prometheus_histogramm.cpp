@@ -2,14 +2,22 @@
 #include "config.h"
 
 Prometheus_Histogramm::Prometheus_Histogramm(char *name, char *labels, int16_t series_size, int16_t buckets_start_value, int16_t buckets_value_increment, int16_t bucket_count)
-    : time_series_count(series_size, name, labels),
-      time_series_sum(series_size, name, labels)
 {
     this->name = name;
     this->labels = labels;
     this->series_size = series_size;
     this->buckets_start_value = buckets_start_value;
     this->buckets_value_increment = buckets_value_increment;
+
+    char time_series_count_name[strlen(name) + 6];
+    char time_series_sum_name[strlen(name) + 4];
+    strcpy(time_series_count_name, name);
+    strcpy(time_series_sum_name, name);
+    strcat(time_series_count_name, "_count");
+    strcat(time_series_sum_name, "_sum");
+
+    this->time_series_count = new TimeSeries(series_size, time_series_count_name, labels);
+    this->time_series_sum = new TimeSeries(series_size, time_series_sum_name, labels);
 
     // We need one more bucket for the "+Inf" bucket
     this->bucket_count = bucket_count + 1;
@@ -23,7 +31,7 @@ Prometheus_Histogramm::Prometheus_Histogramm(char *name, char *labels, int16_t s
     }
 }
 
-void Prometheus_Histogramm::init(WriteRequest *req)
+void Prometheus_Histogramm::init(WriteRequest &req)
 {
     for (int i = 0; i < bucket_count; i++)
     {
@@ -64,18 +72,11 @@ void Prometheus_Histogramm::init(WriteRequest *req)
 
         // Initialize the TimeSeries object for the current bucket
         time_series_buckets[i] = new TimeSeries(series_size, name, bucket_labels.c_str());
-        req->addTimeSeries(*time_series_buckets[i]);
+        req.addTimeSeries(*time_series_buckets[i]);
     }
-    char time_series_count_name[strlen(name) + 6];
-    char time_series_sum_name[strlen(name) + 4];
-    strcpy(time_series_count_name, name);
-    strcpy(time_series_sum_name, name);
-    strcat(time_series_count_name, "_count");
-    strcat(time_series_sum_name, "_sum");
-    time_series_count = TimeSeries(series_size, time_series_count_name, labels);
-    req->addTimeSeries(time_series_count);
-    time_series_sum = TimeSeries(series_size, time_series_sum_name, labels);
-    req->addTimeSeries(time_series_sum);
+
+    req.addTimeSeries(*time_series_count);
+    req.addTimeSeries(*time_series_sum);
 }
 
 void Prometheus_Histogramm::AddValue(int16_t value)
@@ -110,11 +111,13 @@ void Prometheus_Histogramm::AddValue(int16_t value)
 void Prometheus_Histogramm::Ingest(int64_t timestamp)
 {
     if (DEBUG)
+    {
         Serial.println("Ingesting histogramm " + String(this->name));
-    Serial.println("Histogramm " + String(this->name) + " has count " + String(count) + " and sum " + String(sum) + " at " + String(timestamp));
+        Serial.println("Histogramm " + String(this->name) + " has count " + String(count) + " and sum " + String(sum) + " at " + String(timestamp));
+    }
 
-    time_series_sum.addSample(timestamp, this->sum);
-    time_series_count.addSample(timestamp, this->count);
+    time_series_sum->addSample(timestamp, sum);
+    time_series_count->addSample(timestamp, count);
     for (int i = 0; i < bucket_count; i++)
     {
         if (DEBUG)
@@ -136,6 +139,6 @@ void Prometheus_Histogramm::resetSamples()
     {
         time_series_buckets[i]->resetSamples();
     }
-    time_series_sum.resetSamples();
-    time_series_count.resetSamples();
+    time_series_sum->resetSamples();
+    time_series_count->resetSamples();
 }
