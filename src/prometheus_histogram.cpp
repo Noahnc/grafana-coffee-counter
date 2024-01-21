@@ -3,7 +3,8 @@
 
 Prometheus_Histogram::Prometheus_Histogram(char *name, const char *labels, int16_t series_size, int16_t buckets_start_value, int16_t buckets_value_increment, int16_t bucket_count)
 {
-    this->name = name;
+    this->name = new char[strlen(name) + 1];
+    strcpy(this->name, name);
     this->labels = labels;
     this->series_size = series_size;
     this->buckets_start_value = buckets_start_value;

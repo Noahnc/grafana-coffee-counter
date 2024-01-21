@@ -48,8 +48,8 @@ TimeSeries *system_remote_write_failures_count = nullptr;
 
 // helper services
 hw_timer_t *timer0 = timerBegin(0, 80, true); // timer 0 of esp32 for vibration detection
-Vibration vibration(timer0, MOTION_DETECTION_DURATION_THREASHOLD_SECONDS * 1000, coffees_consumed);
-Transport transport(WIFI_STATUS_LED_VCC, WIFI_SSID, WIFI_PASSWORD);
+Vibration *vibration = nullptr;
+Transport *transport = nullptr;
 
 void setup()
 {
@@ -68,29 +68,13 @@ void setup()
   // TimeSeries that can hold 5 samples each. Make sure to set sample_ingestation rate and remote_write_interval accordingly
   std::vector<std::string> labelVector = setupLabels();
   labels = joinLabels(labelVector).c_str();
-  coffees_consumed = new Prometheus_Histogram("coffees_consumed", labels, 5, 10000, 4000, 10);
-  system_memory_free_bytes = new TimeSeries(5, "system_memory_free_bytes", labels);
-  system_memory_total_bytes = new TimeSeries(5, "system_memory_total_bytes", labels);
-  system_network_wifi_rssi = new TimeSeries(5, "system_network_wifi_rssi", labels);
-  system_largest_heap_block_size_bytes = new TimeSeries(5, "system_largest_heap_block_size_bytes", labels);
-  system_run_time_ms = new TimeSeries(5, "system_run_time_ms", labels);
-  system_remote_write_failures_count = new TimeSeries(5, "system_remote_write_failures_count", labels);
-
-  // setup background task for vibration detection
-  vibration.beginAsync();
-
-  // init coffees_consumed histogram
-  coffees_consumed->init(req);
-
-  // setup transportation to Grafana Cloud
-  transport.setEndpoint(GC_PORT, GC_URL, (char *)GC_PATH);
-  transport.setCredentials(GC_USER, GC_PASS);
-  if (DEBUG)
-  {
-    req.setDebug(Serial);
-    transport.setDebug(Serial);
-  }
-  transport.beginAsync();
+  coffees_consumed = new Prometheus_Histogram("CMI_coffees_consumed", labels, 5, 10000, 4000, 10);
+  system_memory_free_bytes = new TimeSeries(5, "ESP32_system_memory_free_bytes", labels);
+  system_memory_total_bytes = new TimeSeries(5, "ESP32_system_memory_total_bytes", labels);
+  system_network_wifi_rssi = new TimeSeries(5, "ESP32_system_network_wifi_rssi", labels);
+  system_largest_heap_block_size_bytes = new TimeSeries(5, "ESP32_system_largest_heap_block_size_bytes", labels);
+  system_run_time_ms = new TimeSeries(5, "ESP32_system_run_time_ms", labels);
+  system_remote_write_failures_count = new TimeSeries(5, "ESP32_system_remote_write_failures_count", labels);
 
   // Add system metrics to the write request
   req.addTimeSeries(*system_memory_free_bytes);
@@ -100,8 +84,26 @@ void setup()
   req.addTimeSeries(*system_run_time_ms);
   req.addTimeSeries(*system_remote_write_failures_count);
 
+  // setup background task for vibration detection
+  vibration = new Vibration(timer0, MOTION_DETECTION_DURATION_THREASHOLD_SECONDS * 1000, coffees_consumed);
+  vibration->beginAsync();
+
+  // init coffees_consumed histogram
+  coffees_consumed->init(req);
+
+  // setup transportation to Grafana Cloud
+  transport = new Transport(WIFI_STATUS_LED_VCC, WIFI_SSID, WIFI_PASSWORD);
+  transport->setEndpoint(GC_PORT, GC_URL, (char *)GC_PATH);
+  transport->setCredentials(GC_USER, GC_PASS);
+  if (DEBUG)
+  {
+    req.setDebug(Serial);
+    transport->setDebug(Serial);
+  }
+  transport->beginAsync();
+
   // Set all time variables to the current startup time
-  start_time_unix_ms = transport.getTimeMillis();
+  start_time_unix_ms = transport->getTimeMillis();
   last_metric_ingestion_unix_ms = start_time_unix_ms;
   last_remote_write_unix_ms = start_time_unix_ms;
 
@@ -111,7 +113,7 @@ void setup()
 
 void loop()
 {
-  current_cicle_start_time_unix_ms = transport.getTimeMillis();
+  current_cicle_start_time_unix_ms = transport->getTimeMillis();
   run_time_ms = current_cicle_start_time_unix_ms - start_time_unix_ms;
 
   handleSampleIngestion();
@@ -172,7 +174,7 @@ void handleMetricsSend()
   }
   if (DEBUG)
     Serial.println("Remote Write successful");
-  last_remote_write_unix_ms = transport.getTimeMillis();
+  last_remote_write_unix_ms = transport->getTimeMillis();
 }
 
 void handleSampleIngestion()
@@ -194,7 +196,7 @@ void handleSampleIngestion()
   ingestMetricSample(*system_largest_heap_block_size_bytes, current_cicle_start_time_unix_ms, ESP.getMaxAllocHeap(), "largest_heap_block_bytes");
   ingestMetricSample(*system_run_time_ms, current_cicle_start_time_unix_ms, run_time_ms, "run_time_ms");
   ingestMetricSample(*system_remote_write_failures_count, current_cicle_start_time_unix_ms, remote_write_failures, "remote_write_failures_count");
-  last_metric_ingestion_unix_ms = transport.getTimeMillis();
+  last_metric_ingestion_unix_ms = transport->getTimeMillis();
 }
 
 void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value, String name)
@@ -213,7 +215,7 @@ void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value, String
 
 bool performRemoteWrite()
 {
-  PromClient::SendResult res = transport.send(req);
+  PromClient::SendResult res = transport->send(req);
   if (!res == PromClient::SendResult::SUCCESS)
   {
     return false;
