@@ -10,6 +10,9 @@
 #include <transport.h>
 #include <prometheus_histogramm.h>
 
+// Increase stack size for the main loop since the default 8192 bytes are not enough
+SET_LOOP_TASK_STACK_SIZE(32768);
+
 Transport transport(WIFI_STATUS_LED_VCC, WIFI_SSID, WIFI_PASSWORD);
 
 // Setup time variables
@@ -32,7 +35,7 @@ void handleMetricsSend();
 void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value, String name);
 
 // The write request that will be used to send the metrics to Prometheus. For every Histogramm you need to add 3 + number of buckets timeseries
-WriteRequest req(10, 4096);
+WriteRequest req(18, 4096);
 
 char *labels = "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}";
 
