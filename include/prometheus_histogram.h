@@ -1,11 +1,11 @@
-#ifndef Prometheus_Histogramm_INCLUDED
-#define Prometheus_Histogramm_INCLUDED
+#ifndef Prometheus_Histogram_INCLUDED
+#define Prometheus_Histogram_INCLUDED
 
 #include "config.h"
 #include <Arduino.h>
 #include <PrometheusArduino.h>
 
-class Prometheus_Histogramm
+class Prometheus_Histogram
 {
 private:
     TimeSeries **time_series_buckets;
@@ -24,7 +24,7 @@ private:
     bool initialized = false;
 
 public:
-    Prometheus_Histogramm(char *name, char *labels, int16_t series_size, int16_t buckets_start_value, int16_t buckets_value_increment, int16_t bucket_count);
+    Prometheus_Histogram(char *name, char *labels, int16_t series_size, int16_t buckets_start_value, int16_t buckets_value_increment, int16_t bucket_count);
     void init(WriteRequest &req);
     void AddValue(int16_t value);
     void Ingest(int64_t timestamp);

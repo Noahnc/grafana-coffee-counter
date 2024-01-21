@@ -3,7 +3,7 @@
 
 #include "config.h"
 #include <Arduino.h>
-#include <prometheus_histogramm.h>
+#include <prometheus_histogram.h>
 
 typedef struct
 {
@@ -14,7 +14,7 @@ typedef struct
     /// @brief Semaphore that must be taken to update the counter.
     SemaphoreHandle_t *vibration_counter_sem;
     /// @brief Counter to increase for the different coffee types.
-    Prometheus_Histogramm *coffees_consumed;
+    Prometheus_Histogram *coffees_consumed;
 
 } vibration_detection_parameters;
 

@@ -8,7 +8,7 @@
 #include <cstring>
 #include <vibration_detect.h>
 #include <transport.h>
-#include <prometheus_histogramm.h>
+#include <prometheus_histogram.h>
 
 // Increase stack size for the main loop since the default 8192 bytes are not enough
 SET_LOOP_TASK_STACK_SIZE(32768);
@@ -38,13 +38,13 @@ void handleSampleIngestion();
 void handleMetricsSend();
 void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value, String name);
 
-// The write request that will be used to send the metrics to Prometheus. For every Histogramm you need to add 3 + number of buckets timeseries
+// The write request that will be used to send the metrics to Prometheus. For every Histogram you need to add 3 + number of buckets timeseries
 WriteRequest req(18, 4096);
 
 char *labels = "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}";
 
 // TimeSeries that can hold 5 samples each. Make sure to set sample_ingestation rate and remote_write_interval accordingly
-Prometheus_Histogramm coffees_consumed("coffees_consumed", labels, 5, 10000, 4000, 10);
+Prometheus_Histogram coffees_consumed("coffees_consumed", labels, 5, 10000, 4000, 10);
 TimeSeries system_memory_free_bytes(5, "system_memory_free_bytes", labels);
 TimeSeries system_memory_total_bytes(5, "system_memory_total_bytes", labels);
 TimeSeries system_network_wifi_rssi(5, "system_network_wifi_rssi", labels);
@@ -71,7 +71,7 @@ void setup()
   coffee_counters_sem = xSemaphoreCreateBinary();
   xSemaphoreGive(coffee_counters_sem);
 
-  // init coffees_consumed histogramm
+  // init coffees_consumed histogram
   coffees_consumed.init(req);
 
   // setup vibration detection task with parameters
