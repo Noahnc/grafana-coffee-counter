@@ -29,6 +29,9 @@ Prometheus_Histogramm::Prometheus_Histogramm(char *name, char *labels, int16_t s
     {
         time_series_buckets[i] = nullptr; // Initialize with nullptr
     }
+
+    update_sem = xSemaphoreCreateBinary();
+    xSemaphoreGive(update_sem);
 }
 
 void Prometheus_Histogramm::init(WriteRequest &req)
@@ -85,27 +88,30 @@ void Prometheus_Histogramm::AddValue(int16_t value)
     {
         Serial.println("Adding value " + String(value) + " to histogramm " + String(this->name));
     }
-
-    bool found = false;
-    // Increment all bucket counters for which the value is smaller than the bucket value
-    for (int i = 0; i < bucket_count - 1; i++)
+    if (xSemaphoreTake(update_sem, portMAX_DELAY) == pdTRUE)
     {
-        if (value <= bucket_le_values[i])
+        bool found = false;
+        // Increment all bucket counters for which the value is smaller than the bucket value
+        for (int i = 0; i < bucket_count - 1; i++)
         {
-            bucket_counters[i] += 1;
-            if (DEBUG)
-                Serial.println("Incrementing counter of bucket le=" + String(bucket_le_values[i]) + " with new count " + String(bucket_counters[i]) + " for histogramm " + String(this->name));
-            found = true;
+            if (value <= bucket_le_values[i])
+            {
+                bucket_counters[i] += 1;
+                if (DEBUG)
+                    Serial.println("Incrementing counter of bucket le=" + String(bucket_le_values[i]) + " with new count " + String(bucket_counters[i]) + " for histogramm " + String(this->name));
+                found = true;
+            }
         }
+        if (!found)
+        {
+            // Increment the counter for the last bucket (which is labeled with "+Inf")
+            Serial.println("Value " + String(value) + " is larger than all buckets of histogramm " + String(this->name) + ", incrementing counter of bucket +Inf");
+            bucket_counters[bucket_count - 1] += 1;
+        }
+        sum += value;
+        count += 1;
+        xSemaphoreGive(update_sem);
     }
-    if (!found)
-    {
-        // Increment the counter for the last bucket (which is labeled with "+Inf")
-        Serial.println("Value " + String(value) + " is larger than all buckets of histogramm " + String(this->name) + ", incrementing counter of bucket +Inf");
-        bucket_counters[bucket_count - 1] += 1;
-    }
-    sum += value;
-    count += 1;
 }
 
 void Prometheus_Histogramm::Ingest(int64_t timestamp)
@@ -116,29 +122,37 @@ void Prometheus_Histogramm::Ingest(int64_t timestamp)
         Serial.println("Histogramm " + String(this->name) + " has count " + String(count) + " and sum " + String(sum) + " at " + String(timestamp));
     }
 
-    time_series_sum->addSample(timestamp, sum);
-    time_series_count->addSample(timestamp, count);
-    for (int i = 0; i < bucket_count; i++)
+    if (xSemaphoreTake(update_sem, portMAX_DELAY) == pdTRUE)
     {
-        if (DEBUG)
+        time_series_sum->addSample(timestamp, sum);
+        time_series_count->addSample(timestamp, count);
+        for (int i = 0; i < bucket_count; i++)
         {
-            String bucket_name = "le=" + String(this->bucket_le_values[i]);
-            if (i == bucket_count - 1)
+            if (DEBUG)
             {
-                bucket_name = "le=+Inf";
+                String bucket_name = "le=" + String(this->bucket_le_values[i]);
+                if (i == bucket_count - 1)
+                {
+                    bucket_name = "le=+Inf";
+                }
+                Serial.println("Histogramm " + String(this->name) + " bucket " + i + " " + bucket_name + " has count " + String(bucket_counters[i]));
             }
-            Serial.println("Histogramm " + String(this->name) + " bucket " + i + " " + bucket_name + " has count " + String(bucket_counters[i]));
+            time_series_buckets[i]->addSample(timestamp, bucket_counters[i]);
         }
-        time_series_buckets[i]->addSample(timestamp, bucket_counters[i]);
+        xSemaphoreGive(update_sem);
     }
 }
 
 void Prometheus_Histogramm::resetSamples()
 {
-    for (int i = 0; i < bucket_count; i++)
+    if (xSemaphoreTake(update_sem, portMAX_DELAY) == pdTRUE)
     {
-        time_series_buckets[i]->resetSamples();
+        for (int i = 0; i < bucket_count; i++)
+        {
+            time_series_buckets[i]->resetSamples();
+        }
+        time_series_sum->resetSamples();
+        time_series_count->resetSamples();
+        xSemaphoreGive(update_sem);
     }
-    time_series_sum->resetSamples();
-    time_series_count->resetSamples();
 }

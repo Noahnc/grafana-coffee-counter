@@ -6,14 +6,18 @@
 #include <tuple>
 #include <stdio.h>
 #include <cstring>
-#include <vibration_detect.h>
+#include <vibration.h>
 #include <transport.h>
 #include <prometheus_histogramm.h>
 
 // Increase stack size for the main loop since the default 8192 bytes are not enough
 SET_LOOP_TASK_STACK_SIZE(32768);
 
-Transport transport(WIFI_STATUS_LED_VCC, WIFI_SSID, WIFI_PASSWORD);
+// Function prototypes
+bool performRemoteWrite();
+void handleSampleIngestion();
+void handleMetricsSend();
+void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value, String name);
 
 // Setup time variables
 int64_t start_time_unix_ms = 0;
@@ -24,19 +28,6 @@ int64_t last_remote_write_unix_ms = 0;
 
 // int to count remote write failures
 int remote_write_failures = 0;
-
-// timer 0 of esp32 for vibration detection
-hw_timer_t *timer0 = NULL;
-// background task for vibration detection
-TaskHandle_t vibration_detection_task;
-// counter for the detected vibrations
-SemaphoreHandle_t coffee_counters_sem;
-
-// Function prototypes
-bool performRemoteWrite();
-void handleSampleIngestion();
-void handleMetricsSend();
-void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value, String name);
 
 // The write request that will be used to send the metrics to Prometheus. For every Histogramm you need to add 3 + number of buckets timeseries
 WriteRequest req(18, 4096);
@@ -52,6 +43,11 @@ TimeSeries system_largest_heap_block_size_bytes(5, "system_largest_heap_block_si
 TimeSeries system_run_time_ms(5, "system_run_time_ms", labels);
 TimeSeries system_remote_write_failures_count(5, "system_remote_write_failures_count", labels);
 
+hw_timer_t *timer0 = timerBegin(0, 80, true); // timer 0 of esp32 for vibration detection
+Vibration vibration(timer0, MOTION_DETECTION_DURATION_THREASHOLD_SECONDS * 1000, &coffees_consumed);
+
+Transport transport(WIFI_STATUS_LED_VCC, WIFI_SSID, WIFI_PASSWORD);
+
 void setup()
 {
   pinMode(VIBRATION_SENSOR_PIN, INPUT);
@@ -66,21 +62,11 @@ void setup()
   Serial.println("Starting up coffe counter ...");
   Serial.println("WiFi SSID: " + String(WIFI_SSID));
 
-  // setup background task for vibration detection with semaphore
-  timer0 = timerBegin(0, 80, true);
-  coffee_counters_sem = xSemaphoreCreateBinary();
-  xSemaphoreGive(coffee_counters_sem);
+  // setup background task for vibration detection
+  vibration.beginAsync();
 
   // init coffees_consumed histogramm
   coffees_consumed.init(req);
-
-  // setup vibration detection task with parameters
-  vibration_detection_parameters parameters;
-  parameters.vibration_detection_threshold_ms = MOTION_DETECTION_DURATION_THREASHOLD_SECONDS * 1000;
-  parameters.timer = timer0;
-  parameters.vibration_counter_sem = &coffee_counters_sem;
-  parameters.coffees_consumed = &coffees_consumed;
-  create_vibration_dection_task(&vibration_detection_task, &parameters);
 
   // setup transportation to Grafana Cloud
   transport.setEndpoint(GC_PORT, GC_URL, (char *)GC_PATH);
@@ -156,19 +142,7 @@ void handleSampleIngestion()
   if (DEBUG)
     Serial.println("Ingesting metrics");
 
-  if (xSemaphoreTake(coffee_counters_sem, (TickType_t)100) == pdTRUE)
-  {
-    coffees_consumed.Ingest(current_cicle_start_time_unix_ms);
-
-    xSemaphoreGive(coffee_counters_sem);
-  }
-  else
-  {
-    if (DEBUG)
-      Serial.println("Ingesting metrics: Failed to take semaphore");
-    return;
-  }
-
+  coffees_consumed.Ingest(current_cicle_start_time_unix_ms);
   ingestMetricSample(system_memory_free_bytes, current_cicle_start_time_unix_ms, ESP.getFreeHeap(), "free_heap_bytes");
   ingestMetricSample(system_memory_total_bytes, current_cicle_start_time_unix_ms, ESP.getHeapSize(), "total_heap_bytes");
   ingestMetricSample(system_network_wifi_rssi, current_cicle_start_time_unix_ms, WiFi.RSSI(), "wifi_rssi");

@@ -22,6 +22,7 @@ private:
     char *name;
     char *labels;
     bool initialized = false;
+    SemaphoreHandle_t update_sem;
 
 public:
     Prometheus_Histogramm(char *name, char *labels, int16_t series_size, int16_t buckets_start_value, int16_t buckets_value_increment, int16_t bucket_count);
