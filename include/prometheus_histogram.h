@@ -19,13 +19,13 @@ private:
     int64_t *bucket_counters;
     int64_t sum = 0;
     int64_t count = 0;
-    char *name;
-    char *labels;
+    const char* name;
+    std::string labels;
     bool initialized = false;
     SemaphoreHandle_t update_sem;
 
 public:
-    Prometheus_Histogram(char *name, char *labels, int16_t series_size, int16_t buckets_start_value, int16_t buckets_value_increment, int16_t bucket_count);
+    Prometheus_Histogram(const char *name, const char *labels, int16_t series_size, int16_t buckets_start_value, int16_t buckets_value_increment, int16_t bucket_count);
     void init(WriteRequest &req);
     void AddValue(int16_t value);
     void Ingest(int64_t timestamp);

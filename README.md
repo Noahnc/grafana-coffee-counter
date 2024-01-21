@@ -18,6 +18,8 @@ build_flags =
 	-D ENV_GRAFANA_PASSWORD=\"<Grafana password>=\"
 	-D ENV_WIFI_SSID=\"<Wifi SSID>\"
 	-D ENV_WIFI_PASSWORD=\"<Wifi password>!\"
+	-D ENV_LABEL_SITE=\"<label value for label SITE>\"
+	-D ENV_LABEL_FLOOR=\"<labe value for label FLOOR>\"
 ```
 
 ### Hardware & Schema

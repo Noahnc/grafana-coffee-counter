@@ -1,7 +1,7 @@
 #include "prometheus_histogram.h"
 #include "config.h"
 
-Prometheus_Histogram::Prometheus_Histogram(char *name, char *labels, int16_t series_size, int16_t buckets_start_value, int16_t buckets_value_increment, int16_t bucket_count)
+Prometheus_Histogram::Prometheus_Histogram(const char *name, const char *labels, int16_t series_size, int16_t buckets_start_value, int16_t buckets_value_increment, int16_t bucket_count)
 {
     this->name = name;
     this->labels = labels;
