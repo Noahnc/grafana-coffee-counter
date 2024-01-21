@@ -19,8 +19,8 @@
 // Metrics Ingestion Rate
 #define METRICS_INGESTION_RATE_SECONDS 60
 
-// Duration in seconds for which motion has to be detected to count as a motion event
-#define MOTION_DETECTION_DURATION_SECONDS 5
+// Amount of time in seconds vibration must be detected to be considered as vibration event
+#define MOTION_DETECTION_DURATION_THREASHOLD_SECONDS 8
 
 // Pin to which the vibration sensor is connected
 #define VIBRATION_SENSOR_PIN 36
