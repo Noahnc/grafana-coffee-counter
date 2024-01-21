@@ -137,6 +137,7 @@ void handleMetricsSend()
     remote_write_failures++;
     if (DEBUG)
       Serial.println("Remote Write failed: " + String(success));
+    return;
   }
   if (DEBUG)
     Serial.println("Remote Write successful");
