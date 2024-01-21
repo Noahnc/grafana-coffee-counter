@@ -13,8 +13,10 @@ Transport::Transport(const int wifi_status_pin, const char *wifi_ssid, const cha
     xSemaphoreGive(semaphore);
 }
 
-Transport::~Transport(){
-    if (connectTaskHandle != NULL){
+Transport::~Transport()
+{
+    if (connectTaskHandle != NULL)
+    {
         vTaskDelete(connectTaskHandle);
     }
     if (blinkTaskHandle != NULL)
@@ -92,7 +94,7 @@ void Transport::beginAsync()
     xTaskCreatePinnedToCore(
         Transport::connectTask,
         "transport connect",
-        20000, /* Stack size in words */
+        10000, /* Stack size in words */
         this,
         3, /* Priority of the task */
         &connectTaskHandle,
@@ -134,12 +136,14 @@ void Transport::connectTask(void *args)
         {
             int8_t dbm = WiFi.RSSI();
             instance->debug->println("Wifi Signal: " + String(dbm) + "dBm");
-            if(dbm > -70){
+            if (dbm > -70)
+            {
                 // good/fair connection
                 instance->stopLedBlink();
                 digitalWrite(instance->wifiStatusPin, HIGH);
             }
-            else {
+            else
+            {
                 // bad connection
                 instance->startLedBlink(StatusIndicator::ConnectedBadSignal);
             }
