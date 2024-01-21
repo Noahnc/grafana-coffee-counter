@@ -142,7 +142,7 @@ void handleSampleIngestion()
   if (DEBUG)
     Serial.println("Ingesting metrics");
 
-  if (xSemaphoreTake(coffee_counters_sem, (TickType_t)10) == pdTRUE)
+  if (xSemaphoreTake(coffee_counters_sem, (TickType_t)100) == pdTRUE)
   {
     coffees_consumed.Ingest(current_cicle_start_time_unix_ms);
 
