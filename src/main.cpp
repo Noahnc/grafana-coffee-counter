@@ -161,6 +161,13 @@ void handleSampleIngestion()
 
     xSemaphoreGive(coffee_counters_sem);
   }
+  else
+  {
+    if (DEBUG)
+      Serial.println("Ingesting metrics: Failed to take semaphore");
+    return;
+  }
+
   ingestMetricSample(system_memory_free_bytes, current_cicle_start_time_unix_ms, ESP.getFreeHeap(), "free_heap_bytes");
   ingestMetricSample(system_memory_total_bytes, current_cicle_start_time_unix_ms, ESP.getHeapSize(), "total_heap_bytes");
   ingestMetricSample(system_network_wifi_rssi, current_cicle_start_time_unix_ms, WiFi.RSSI(), "wifi_rssi");
