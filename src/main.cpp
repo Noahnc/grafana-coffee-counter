@@ -17,9 +17,13 @@ Transport transport(WIFI_STATUS_LED_VCC, WIFI_SSID, WIFI_PASSWORD);
 
 // Setup time variables
 int64_t start_time_unix_ms = 0;
+int64_t run_time_ms = 0;
 int64_t current_cicle_start_time_unix_ms = 0;
 int64_t last_metric_ingestion_unix_ms = 0;
 int64_t last_remote_write_unix_ms = 0;
+
+// int to count remote write failures
+int remote_write_failures = 0;
 
 // timer 0 of esp32 for vibration detection
 hw_timer_t *timer0 = NULL;
@@ -45,6 +49,8 @@ TimeSeries system_memory_free_bytes(5, "system_memory_free_bytes", labels);
 TimeSeries system_memory_total_bytes(5, "system_memory_total_bytes", labels);
 TimeSeries system_network_wifi_rssi(5, "system_network_wifi_rssi", labels);
 TimeSeries system_largest_heap_block_size_bytes(5, "system_largest_heap_block_size_bytes", labels);
+TimeSeries system_run_time_ms(5, "system_run_time_ms", labels);
+TimeSeries system_remote_write_failures_count(5, "system_remote_write_failures_count", labels);
 
 void setup()
 {
@@ -104,6 +110,7 @@ void setup()
 void loop()
 {
   current_cicle_start_time_unix_ms = transport.getTimeMillis();
+  run_time_ms = current_cicle_start_time_unix_ms - start_time_unix_ms;
 
   handleSampleIngestion();
   handleMetricsSend();
@@ -125,8 +132,14 @@ void handleMetricsSend()
     Serial.println("Performing remote write");
 
   bool success = performRemoteWrite();
+  if (!success)
+  {
+    remote_write_failures++;
+    if (DEBUG)
+      Serial.println("Remote Write failed: " + String(success));
+  }
   if (DEBUG)
-    Serial.println("Remote Write successfull: " + String(success));
+    Serial.println("Remote Write successful");
   last_remote_write_unix_ms = transport.getTimeMillis();
 }
 
@@ -152,6 +165,8 @@ void handleSampleIngestion()
   ingestMetricSample(system_memory_total_bytes, current_cicle_start_time_unix_ms, ESP.getHeapSize(), "total_heap_bytes");
   ingestMetricSample(system_network_wifi_rssi, current_cicle_start_time_unix_ms, WiFi.RSSI(), "wifi_rssi");
   ingestMetricSample(system_largest_heap_block_size_bytes, current_cicle_start_time_unix_ms, ESP.getMaxAllocHeap(), "largest_heap_block_bytes");
+  ingestMetricSample(system_run_time_ms, current_cicle_start_time_unix_ms, run_time_ms, "run_time_ms");
+  ingestMetricSample(system_remote_write_failures_count, current_cicle_start_time_unix_ms, remote_write_failures, "remote_write_failures_count");
   last_metric_ingestion_unix_ms = transport.getTimeMillis();
 }
 
@@ -181,5 +196,7 @@ bool performRemoteWrite()
   system_memory_total_bytes.resetSamples();
   system_network_wifi_rssi.resetSamples();
   system_largest_heap_block_size_bytes.resetSamples();
+  system_run_time_ms.resetSamples();
+  system_remote_write_failures_count.resetSamples();
   return true;
 }
