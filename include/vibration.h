@@ -3,7 +3,7 @@
 
 #include "config.h"
 #include <Arduino.h>
-#include <prometheus_histogramm.h>
+#include <prometheus_histogram.h>
 
 class Vibration
 {
