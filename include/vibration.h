@@ -13,7 +13,7 @@ public:
     void beginAsync();
 
 private:
-    TaskHandle_t vibration_detection_task;
+    TaskHandle_t vibration_detection_task = NULL;
     hw_timer_t *timer;
     int32_t vibration_detection_threshold_ms;
     Prometheus_Histogram *coffees_consumed;
