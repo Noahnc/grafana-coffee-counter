@@ -1,6 +1,6 @@
 #include "vibration.h"
 
-Vibration::Vibration(hw_timer_t *timer, int32_t vibration_detection_threshold_ms, Prometheus_Histogramm *coffees_consumed)
+Vibration::Vibration(hw_timer_t *timer, int32_t vibration_detection_threshold_ms, Prometheus_Histogram *coffees_consumed)
 {
     Vibration::timer = timer;
     Vibration::vibration_detection_threshold_ms = vibration_detection_threshold_ms;

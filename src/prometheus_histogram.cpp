@@ -98,14 +98,14 @@ void Prometheus_Histogram::AddValue(int16_t value)
             {
                 bucket_counters[i] += 1;
                 if (DEBUG)
-                    Serial.println("Incrementing counter of bucket le=" + String(bucket_le_values[i]) + " with new count " + String(bucket_counters[i]) + " for histogramm " + String(this->name));
+                    Serial.println("Incrementing counter of bucket le=" + String(bucket_le_values[i]) + " with new count " + String(bucket_counters[i]) + " for histogram " + String(this->name));
                 found = true;
             }
         }
         if (!found)
         {
             // Increment the counter for the last bucket (which is labeled with "+Inf")
-            Serial.println("Value " + String(value) + " is larger than all buckets of histogramm " + String(this->name) + ", incrementing counter of bucket +Inf");
+            Serial.println("Value " + String(value) + " is larger than all buckets of histogram " + String(this->name) + ", incrementing counter of bucket +Inf");
             bucket_counters[bucket_count - 1] += 1;
         }
         sum += value;
@@ -135,7 +135,7 @@ void Prometheus_Histogram::Ingest(int64_t timestamp)
                 {
                     bucket_name = "le=+Inf";
                 }
-                Serial.println("Histogramm " + String(this->name) + " bucket " + i + " " + bucket_name + " has count " + String(bucket_counters[i]));
+                Serial.println("Histogram " + String(this->name) + " bucket " + i + " " + bucket_name + " has count " + String(bucket_counters[i]));
             }
             time_series_buckets[i]->addSample(timestamp, bucket_counters[i]);
         }
