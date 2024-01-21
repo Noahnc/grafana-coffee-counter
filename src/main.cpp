@@ -8,7 +8,7 @@
 #include <cstring>
 #include <vibration.h>
 #include <transport.h>
-#include <prometheus_histogramm.h>
+#include <prometheus_histogram.h>
 
 // Increase stack size for the main loop since the default 8192 bytes are not enough
 SET_LOOP_TASK_STACK_SIZE(32768);
@@ -35,7 +35,7 @@ WriteRequest req(18, 4096);
 char *labels = "{job=\"cmi_coffee_counter\",location=\"schwerzenbach_4OG\"}";
 
 // TimeSeries that can hold 5 samples each. Make sure to set sample_ingestation rate and remote_write_interval accordingly
-Prometheus_Histogramm coffees_consumed("coffees_consumed", labels, 5, 10000, 4000, 10);
+Prometheus_Histogram coffees_consumed("coffees_consumed", labels, 5, 10000, 4000, 10);
 TimeSeries system_memory_free_bytes(5, "system_memory_free_bytes", labels);
 TimeSeries system_memory_total_bytes(5, "system_memory_total_bytes", labels);
 TimeSeries system_network_wifi_rssi(5, "system_network_wifi_rssi", labels);
@@ -65,7 +65,7 @@ void setup()
   // setup background task for vibration detection
   vibration.beginAsync();
 
-  // init coffees_consumed histogramm
+  // init coffees_consumed histogram
   coffees_consumed.init(req);
 
   // setup transportation to Grafana Cloud

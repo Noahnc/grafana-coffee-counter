@@ -1,7 +1,7 @@
-#include "prometheus_histogramm.h"
+#include "prometheus_histogram.h"
 #include "config.h"
 
-Prometheus_Histogramm::Prometheus_Histogramm(char *name, char *labels, int16_t series_size, int16_t buckets_start_value, int16_t buckets_value_increment, int16_t bucket_count)
+Prometheus_Histogram::Prometheus_Histogram(char *name, char *labels, int16_t series_size, int16_t buckets_start_value, int16_t buckets_value_increment, int16_t bucket_count)
 {
     this->name = name;
     this->labels = labels;
@@ -34,7 +34,7 @@ Prometheus_Histogramm::Prometheus_Histogramm(char *name, char *labels, int16_t s
     xSemaphoreGive(update_sem);
 }
 
-void Prometheus_Histogramm::init(WriteRequest &req)
+void Prometheus_Histogram::init(WriteRequest &req)
 {
     for (int i = 0; i < bucket_count; i++)
     {
@@ -82,11 +82,11 @@ void Prometheus_Histogramm::init(WriteRequest &req)
     req.addTimeSeries(*time_series_sum);
 }
 
-void Prometheus_Histogramm::AddValue(int16_t value)
+void Prometheus_Histogram::AddValue(int16_t value)
 {
     if (DEBUG)
     {
-        Serial.println("Adding value " + String(value) + " to histogramm " + String(this->name));
+        Serial.println("Adding value " + String(value) + " to histogram " + String(this->name));
     }
     if (xSemaphoreTake(update_sem, portMAX_DELAY) == pdTRUE)
     {
@@ -114,12 +114,12 @@ void Prometheus_Histogramm::AddValue(int16_t value)
     }
 }
 
-void Prometheus_Histogramm::Ingest(int64_t timestamp)
+void Prometheus_Histogram::Ingest(int64_t timestamp)
 {
     if (DEBUG)
     {
-        Serial.println("Ingesting histogramm " + String(this->name));
-        Serial.println("Histogramm " + String(this->name) + " has count " + String(count) + " and sum " + String(sum) + " at " + String(timestamp));
+        Serial.println("Ingesting histogram " + String(this->name));
+        Serial.println("Histogram " + String(this->name) + " has count " + String(count) + " and sum " + String(sum) + " at " + String(timestamp));
     }
 
     if (xSemaphoreTake(update_sem, portMAX_DELAY) == pdTRUE)
@@ -143,7 +143,7 @@ void Prometheus_Histogramm::Ingest(int64_t timestamp)
     }
 }
 
-void Prometheus_Histogramm::resetSamples()
+void Prometheus_Histogram::resetSamples()
 {
     if (xSemaphoreTake(update_sem, portMAX_DELAY) == pdTRUE)
     {
