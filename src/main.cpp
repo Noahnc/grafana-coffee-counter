@@ -72,7 +72,7 @@ void setup()
   if (DEBUG)
     Serial.println("Labels: " + String(labels));
 
-  // TimeSeries that can hold 10 samples each. Make sure to set sample_ingestation rate and remote_write_interval accordingly
+  // TimeSeries that hold 10 samples. Make sure to set sample_ingestation rate and remote_write_interval accordingly
   coffees_consumed = new Prometheus_Histogram("CMI_coffees_consumed", labels, TIME_SERIES_SAMPLE_COUNT, 14000, 5000, 10);
   system_memory_free_bytes = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_memory_free_bytes", labels);
   system_memory_total_bytes = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_memory_total_bytes", labels);
