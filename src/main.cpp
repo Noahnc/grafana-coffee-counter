@@ -66,7 +66,8 @@ void setup()
   Serial.println("WiFi SSID: " + String(WIFI_SSID));
 
   std::vector<std::string> labelVector = setupLabels();
-  labels = joinLabels(labelVector).c_str();
+  std::string labelString = joinLabels(labelVector);
+  labels = labelString.c_str();
 
   if (DEBUG)
     Serial.println("Labels: " + String(labels));
