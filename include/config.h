@@ -19,6 +19,12 @@
 // Metrics Ingestion Rate
 #define METRICS_INGESTION_RATE_SECONDS 60
 
+// Metric label value for the site
+#define METRICS_LABEL_SITE ENV_LABEL_SITE
+
+// Metric label value for the floor
+#define METRICS_LABEL_FLOOR ENV_LABEL_FLOOR
+
 // Amount of time in seconds vibration must be detected to be considered as vibration event
 #define MOTION_DETECTION_DURATION_THREASHOLD_SECONDS 8
 
@@ -29,3 +35,6 @@
 
 // Pin to indicate WIFI status
 #define WIFI_STATUS_LED_VCC 26
+
+// The number samples all time series can hold
+#define TIME_SERIES_SAMPLE_COUNT 10

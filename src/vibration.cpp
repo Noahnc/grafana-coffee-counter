@@ -19,6 +19,7 @@ void Vibration::beginAsync()
 {
     if (vibration_detection_task == NULL)
     {
+        Serial.println("Starting vibration detection");
         xTaskCreatePinnedToCore(
             Vibration::vibration_dection_task,
             "vibration detection",

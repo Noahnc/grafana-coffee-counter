@@ -1,9 +1,10 @@
 #include "prometheus_histogram.h"
 #include "config.h"
 
-Prometheus_Histogram::Prometheus_Histogram(char *name, char *labels, int16_t series_size, int16_t buckets_start_value, int16_t buckets_value_increment, int16_t bucket_count)
+Prometheus_Histogram::Prometheus_Histogram(const char *name, const char *labels, int16_t series_size, int16_t buckets_start_value, int16_t buckets_value_increment, int16_t bucket_count)
 {
-    this->name = name;
+    this->name = new char[strlen(name) + 1];
+    strcpy(this->name, name);
     this->labels = labels;
     this->series_size = series_size;
     this->buckets_start_value = buckets_start_value;
@@ -36,6 +37,9 @@ Prometheus_Histogram::Prometheus_Histogram(char *name, char *labels, int16_t ser
 
 void Prometheus_Histogram::init(WriteRequest &req)
 {
+    char time_series_buckets_name[strlen(name) + 8];
+    strcpy(time_series_buckets_name, name);
+    strcat(time_series_buckets_name, "_bucket");
     for (int i = 0; i < bucket_count; i++)
     {
         this->bucket_le_values[i] = buckets_start_value + i * buckets_value_increment;
@@ -74,7 +78,7 @@ void Prometheus_Histogram::init(WriteRequest &req)
         }
 
         // Initialize the TimeSeries object for the current bucket
-        time_series_buckets[i] = new TimeSeries(series_size, name, bucket_labels.c_str());
+        time_series_buckets[i] = new TimeSeries(series_size, time_series_buckets_name, bucket_labels.c_str());
         req.addTimeSeries(*time_series_buckets[i]);
     }
 
