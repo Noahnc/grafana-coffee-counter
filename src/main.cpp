@@ -34,7 +34,7 @@ int64_t last_remote_write_unix_ms = 0;
 int remote_write_failures = 0;
 
 // The write request that will be used to send the metrics to Prometheus. For every Histogram you need to add 3 + number of buckets timeseries
-WriteRequest req(18, 4096);
+WriteRequest req(18, 8192);
 
 // TimeSeries and labels
 const char *labels;
@@ -65,9 +65,13 @@ void setup()
   Serial.println("Starting up coffe counter ...");
   Serial.println("WiFi SSID: " + String(WIFI_SSID));
 
-  // TimeSeries that can hold 5 samples each. Make sure to set sample_ingestation rate and remote_write_interval accordingly
   std::vector<std::string> labelVector = setupLabels();
   labels = joinLabels(labelVector).c_str();
+
+  if (DEBUG)
+    Serial.println("Labels: " + String(labels));
+
+  // TimeSeries that can hold 10 samples each. Make sure to set sample_ingestation rate and remote_write_interval accordingly
   coffees_consumed = new Prometheus_Histogram("CMI_coffees_consumed", labels, TIME_SERIES_SAMPLE_COUNT, 14000, 5000, 10);
   system_memory_free_bytes = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_memory_free_bytes", labels);
   system_memory_total_bytes = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_memory_total_bytes", labels);
