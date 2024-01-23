@@ -68,13 +68,13 @@ void setup()
   // TimeSeries that can hold 5 samples each. Make sure to set sample_ingestation rate and remote_write_interval accordingly
   std::vector<std::string> labelVector = setupLabels();
   labels = joinLabels(labelVector).c_str();
-  coffees_consumed = new Prometheus_Histogram("CMI_coffees_consumed", labels, 5, 10000, 4000, 10);
-  system_memory_free_bytes = new TimeSeries(5, "ESP32_system_memory_free_bytes", labels);
-  system_memory_total_bytes = new TimeSeries(5, "ESP32_system_memory_total_bytes", labels);
-  system_network_wifi_rssi = new TimeSeries(5, "ESP32_system_network_wifi_rssi", labels);
-  system_largest_heap_block_size_bytes = new TimeSeries(5, "ESP32_system_largest_heap_block_size_bytes", labels);
-  system_run_time_ms = new TimeSeries(5, "ESP32_system_run_time_ms", labels);
-  system_remote_write_failures_count = new TimeSeries(5, "ESP32_system_remote_write_failures_count", labels);
+  coffees_consumed = new Prometheus_Histogram("CMI_coffees_consumed", labels, TIME_SERIES_SAMPLE_COUNT, 10000, 4000, 10);
+  system_memory_free_bytes = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_memory_free_bytes", labels);
+  system_memory_total_bytes = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_memory_total_bytes", labels);
+  system_network_wifi_rssi = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_network_wifi_rssi", labels);
+  system_largest_heap_block_size_bytes = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_largest_heap_block_size_bytes", labels);
+  system_run_time_ms = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_run_time_ms", labels);
+  system_remote_write_failures_count = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_remote_write_failures_count", labels);
 
   // Add system metrics to the write request
   req.addTimeSeries(*system_memory_free_bytes);

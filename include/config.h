@@ -35,3 +35,6 @@
 
 // Pin to indicate WIFI status
 #define WIFI_STATUS_LED_VCC 26
+
+// The number samples all time series can hold
+#define TIME_SERIES_SAMPLE_COUNT 10
