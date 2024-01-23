@@ -62,7 +62,7 @@ void setup()
   while (!Serial)
     ;
 
-  Serial.println("Starting up coffe counter ...");
+  Serial.println("Starting up coffee counter ...");
   Serial.println("WiFi SSID: " + String(WIFI_SSID));
 
   std::vector<std::string> labelVector = setupLabels();
