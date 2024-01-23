@@ -37,6 +37,9 @@ Prometheus_Histogram::Prometheus_Histogram(const char *name, const char *labels,
 
 void Prometheus_Histogram::init(WriteRequest &req)
 {
+    char time_series_buckets_name[strlen(name) + 8];
+    strcpy(time_series_buckets_name, name);
+    strcat(time_series_buckets_name, "_bucket");
     for (int i = 0; i < bucket_count; i++)
     {
         this->bucket_le_values[i] = buckets_start_value + i * buckets_value_increment;
@@ -75,7 +78,7 @@ void Prometheus_Histogram::init(WriteRequest &req)
         }
 
         // Initialize the TimeSeries object for the current bucket
-        time_series_buckets[i] = new TimeSeries(series_size, name, bucket_labels.c_str());
+        time_series_buckets[i] = new TimeSeries(series_size, time_series_buckets_name, bucket_labels.c_str());
         req.addTimeSeries(*time_series_buckets[i]);
     }
 

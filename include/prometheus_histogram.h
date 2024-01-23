@@ -19,7 +19,7 @@ private:
     int64_t *bucket_counters;
     int64_t sum = 0;
     int64_t count = 0;
-    char* name;
+    char *name;
     std::string labels;
     bool initialized = false;
     SemaphoreHandle_t update_sem;
