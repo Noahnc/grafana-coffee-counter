@@ -86,7 +86,7 @@ void Prometheus_Histogram::init(WriteRequest &req)
     req.addTimeSeries(*time_series_sum);
 }
 
-void Prometheus_Histogram::AddValue(int16_t value)
+void Prometheus_Histogram::AddValue(int64_t value)
 {
     if (DEBUG)
     {

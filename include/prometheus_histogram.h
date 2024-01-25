@@ -27,7 +27,7 @@ private:
 public:
     Prometheus_Histogram(const char *name, const char *labels, int16_t series_size, int16_t buckets_start_value, int16_t buckets_value_increment, int16_t bucket_count);
     void init(WriteRequest &req);
-    void AddValue(int16_t value);
+    void AddValue(int64_t value);
     void Ingest(int64_t timestamp);
     void resetSamples();
 };
