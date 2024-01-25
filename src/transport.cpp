@@ -135,7 +135,9 @@ void Transport::connectTask(void *args)
         if (wifiStatus == WL_CONNECTED)
         {
             int8_t dbm = WiFi.RSSI();
-            instance->debug->println("Wifi Signal: " + String(dbm) + "dBm");
+            if(instance->debug != nullptr){
+                instance->debug->println("Wifi Signal: " + String(dbm) + "dBm");
+            }
             if (dbm > -70)
             {
                 // good/fair connection
