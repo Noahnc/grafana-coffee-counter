@@ -118,6 +118,9 @@ void setup()
 
 void loop()
 {
+  if(DEBUG)
+    Serial.println("Main loop");
+
   current_cicle_start_time_unix_ms = transport->getTimeMillis();
   run_time_ms = current_cicle_start_time_unix_ms - start_time_unix_ms;
 
@@ -174,7 +177,7 @@ void handleMetricsSend()
   {
     remote_write_failures++;
     if (DEBUG)
-      Serial.println("Remote Write failed: " + String(success));
+      Serial.println("Remote Write failed");
     return;
   }
   if (DEBUG)

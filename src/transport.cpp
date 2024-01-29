@@ -66,7 +66,7 @@ int64_t Transport::getTimeMillis()
     int64_t result = -1;
     while (result < 0)
     {
-        if (xSemaphoreTake(semaphore, (TickType_t)10) == pdTRUE)
+        if (xSemaphoreTake(semaphore, (TickType_t)50) == pdTRUE)
         {
             if (transportInitialized)
             {
@@ -74,6 +74,10 @@ int64_t Transport::getTimeMillis()
             }
             xSemaphoreGive(semaphore);
         }
+    }
+    if (debug != nullptr)
+    {
+        debug->printf("getTimeMillis: %jd\n", result);
     }
     return result;
 }
@@ -108,26 +112,44 @@ void Transport::connectTask(void *args)
     while (true)
     {
         // ensure init
-        if (xSemaphoreTake(instance->semaphore, (TickType_t)100) == pdTRUE)
+        if (xSemaphoreTake(instance->semaphore, (TickType_t)1000) == pdTRUE)
         {
-            if (!instance->transportInitialized)
+            try
             {
-                instance->startLedBlink(StatusIndicator::Connecting);
-                if (!instance->promTransport.begin())
+                if (!instance->transportInitialized)
                 {
-                    Serial.println(instance->promTransport.errmsg);
-                }
-                else if (!instance->promClient.begin())
-                {
-                    Serial.println(instance->promClient.errmsg);
-                }
-                else
-                {
-                    instance->transportInitialized = true;
+                    instance->startLedBlink(StatusIndicator::Connecting);
+                    if (!instance->promTransport.begin())
+                    {
+                        Serial.println(instance->promTransport.errmsg);
+                    }
+                    else if (!instance->promClient.begin())
+                    {
+                        Serial.println(instance->promClient.errmsg);
+                    }
+                    else
+                    {
+                        instance->transportInitialized = true;
+                    }
+
+                    xSemaphoreGive(instance->semaphore);
+                    vTaskDelay(5000 / portTICK_PERIOD_MS);
+                    continue;
                 }
             }
+            catch (const std::exception &e)
+            {
+                Serial.println(e.what());
+                xSemaphoreGive(instance->semaphore);
+                vTaskDelay(5000 / portTICK_PERIOD_MS);
+                continue;
+            }
             xSemaphoreGive(instance->semaphore);
-            vTaskDelay(2000 / portTICK_PERIOD_MS);
+        }
+        else
+        {
+            vTaskDelay(5000 / portTICK_PERIOD_MS);
+            continue;
         }
 
         // update LED status and try to reconnect if required
@@ -135,7 +157,8 @@ void Transport::connectTask(void *args)
         if (wifiStatus == WL_CONNECTED)
         {
             int8_t dbm = WiFi.RSSI();
-            if(instance->debug != nullptr){
+            if (instance->debug != nullptr)
+            {
                 instance->debug->println("Wifi Signal: " + String(dbm) + "dBm");
             }
             if (dbm > -70)
@@ -153,7 +176,14 @@ void Transport::connectTask(void *args)
         else
         {
             instance->startLedBlink(StatusIndicator::Connecting);
-            instance->promTransport.checkAndReconnectConnection();
+            try
+            {
+                instance->promTransport.checkAndReconnectConnection();
+            }
+            catch (const std::exception &e)
+            {
+                Serial.println(e.what());
+            }
         }
         vTaskDelay(5000 / portTICK_PERIOD_MS);
     }
