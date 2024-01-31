@@ -5,7 +5,7 @@ The coffee counter consists of a custom PCB with an ESP32 and an DFRobot Vibrati
 
 ## How it works
 
-The vibration sensor is connected to the ESP32 and reads the vibration state. If vibration is detected, the ESP32 will count the amount of time the vibration sensor is continuously active. If the vibration sensor is active for more than 8 seconds, the vibration is consideres as a coffee and counters of a Prometheus histogram are increased. Every 60s, a new Time Series is created for the coffee histogram and some other system metrics. The data is then sent to Grafana Cloud Mimir using Prometheus Remote Write. Since the library used for the Prometheus Remote Write is fully Prometheus compatible, the data can technically also be sent to any other Prometheus compatible system. Just make sure to change the URL and the root certificate accordingly.
+The vibration sensor attached to the coffee machine is connected to the ESP32 and reads the vibration state. If vibration is detected, the ESP32 will count the amount of time the vibration sensor is continuously active. If the vibration sensor is active for more than 8 seconds, the vibration is consideres as a coffee and counters of a Prometheus histogram are increased. Every 60s, a new Time Series is created for the coffee histogram and some other system metrics. The data is then sent to Grafana Cloud Mimir using Prometheus Remote Write. Since the library used for the Prometheus Remote Write is fully Prometheus compatible, the data can technically also be sent to any other Prometheus compatible system. Just make sure to change the URL and the root certificate accordingly.
 
 ## Hardware
 
