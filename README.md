@@ -33,6 +33,7 @@ build_flags =
 ### Hardware & Schema
 
 The design of the custom PCB can be found in the folder `./easy_eda`. The design was created with [EasyEDA](https://easyeda.com/).
+In addition to the custom PCB, there are STL files for a 3D-printed case in the folder `./3d_print`.
 
 ## CP2102N: USB to UART
 
