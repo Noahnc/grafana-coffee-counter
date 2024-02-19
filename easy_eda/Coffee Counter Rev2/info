@@ -1,10 +1,10 @@
 {
   "uuid": "4050fa66fb54157f2232a11f7c9a2425",
-  "path": "Offline/Coffee Counter Rev2",
+  "path": "Offline/Coffee%20Counter%20Rev2",
   "name": "Coffee Counter Rev2",
   "content": "",
   "created_at": "2024-01-23 23:55:53",
-  "updated_at": "2024-02-19 22:00:29",
+  "updated_at": "2024-02-19 23:33:15",
   "stick": "",
   "documents": [
     {
@@ -555,11 +555,11 @@
         "02855d248e434f3cb829027fb3896c67": 1
       },
       "BOM": [],
-      "updateTime": 1708376429,
+      "updateTime": 1708381995,
       "createTime": 1706050676,
       "histories": [],
       "created_at": "2024-01-23 23:57:56",
-      "updated_at": "2024-02-19 22:00:29"
+      "updated_at": "2024-02-19 23:33:15"
     }
   ],
   "sort": [
