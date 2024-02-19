@@ -1,0 +1,525 @@
+{
+  "uuid": "a797e9031585abaf94ad2b2b8c4625c8",
+  "path": "Offline/Coffee Counter Rev1",
+  "name": "Coffee Counter Rev1",
+  "content": "",
+  "created_at": "2023-12-25 17:09:59",
+  "updated_at": "2024-01-23 23:55:13",
+  "stick": "",
+  "documents": [
+    {
+      "uuid": "a4de8224214b386455274b10b82ba844",
+      "title": "mainboard",
+      "description": "",
+      "docType": "1",
+      "master": "",
+      "thumb": "/images/thumb-default.png",
+      "components": {
+        "6c94291b8c6c49bca60cf69bc9ab25d9": 1,
+        "588dac9f81df8f83843513972963b454": 1,
+        "b0248eb51e084227889f2cb84eab79c4": 18,
+        "5cbe824183374fac8e4c1ae848199ce3": 5,
+        "24eeb2ceca08480b92b847b6a310acda": 9,
+        "a9aa2b14f188405792fa87ac344499a4": 1,
+        "f0e6be0b6dfb4ea58aca4b1747def383": 1,
+        "8746b6cb796f41cf8cbf4d20c17a7499": 1,
+        "02aff2ff6e514454bd8e9eaa83aa0cc7": 3,
+        "b8c5a10329a840f7acc0818c2b15d15f": 1,
+        "7f7e25e4080c4d5ea6b7eb27c71d581e": 2,
+        "a68dc5e6a9944c46b7604648a43dcd65": 1,
+        "08103482a30742c285d24fedb8ec7c4a": 4,
+        "b82150387a2041b4afd55b90c79c5923": 1,
+        "62545d909a434e90830927e050915e6d": 2,
+        "1e679035a8a24b8387bb02534992006b": 2,
+        "f5b1d9403e49471cab43bc5a1bec336f": 1
+      },
+      "BOM": [
+        [
+          "Value",
+          "Quantity",
+          "Package",
+          "Components",
+          "CustomPara"
+        ],
+        [
+          "22u/10v/20%",
+          2,
+          "C0603",
+          "C1,C3",
+          {
+            "Supplier Part": "C2762594",
+            "Supplier": "LCSC",
+            "Contributor": "LCEDA_Lib",
+            "spiceSymbolName": "C_0603_US",
+            "Manufacturer Part": "CL10A226MO7JZNC",
+            "Manufacturer": "SAMSUNG(三星)",
+            "puuid": "f8151fdc728a41ebbc304e11d39e5437",
+            "uuid": "24eeb2ceca08480b92b847b6a310acda"
+          }
+        ],
+        [
+          "22u/10v/20%",
+          1,
+          "C0603",
+          "C2",
+          {
+            "Supplier Part": "C2762594",
+            "Supplier": "LCSC",
+            "Contributor": "LCEDA_Lib",
+            "spiceSymbolName": "C_0603_US",
+            "Manufacturer Part": "CL10A226MO7JZNC",
+            "Package Display": "No",
+            "Manufacturer": "SAMSUNG(三星)",
+            "puuid": "f8151fdc728a41ebbc304e11d39e5437",
+            "uuid": "24eeb2ceca08480b92b847b6a310acda"
+          }
+        ],
+        [
+          "0.1u/50v/10%",
+          5,
+          "C0603",
+          "C4,C5,C6,C7,C9",
+          {
+            "Supplier Part": "C1591",
+            "Supplier": "LCSC",
+            "Contributor": "LCEDA_Lib",
+            "spiceSymbolName": "C_0603_US",
+            "Manufacturer Part": "CL10B104KB8NNNC",
+            "Manufacturer": "SAMSUNG(三星)",
+            "puuid": "f8151fdc728a41ebbc304e11d39e5437",
+            "uuid": "24eeb2ceca08480b92b847b6a310acda"
+          }
+        ],
+        [
+          "4.7u/6.3v/10%",
+          1,
+          "C0603",
+          "C8",
+          {
+            "Supplier Part": "C8032",
+            "Supplier": "LCSC",
+            "Contributor": "LCEDA_Lib",
+            "spiceSymbolName": "C_0603_US",
+            "Manufacturer Part": "CL10A475KQ8NNNC",
+            "Manufacturer": "SAMSUNG(三星)",
+            "puuid": "f8151fdc728a41ebbc304e11d39e5437",
+            "uuid": "24eeb2ceca08480b92b847b6a310acda"
+          }
+        ],
+        [
+          "0.100u/6.3v/20%",
+          1,
+          "C0805",
+          "C10",
+          {
+            "Supplier Part": "C141660",
+            "Supplier": "LCSC",
+            "Contributor": "LCEDA_Lib",
+            "spiceSymbolName": "C_0805_US",
+            "Manufacturer Part": "GRM21BR60J107ME15L",
+            "Manufacturer": "muRata(村田)",
+            "puuid": "2ee8eb13a0124a108e622ce40c0c25a8",
+            "uuid": "b82150387a2041b4afd55b90c79c5923"
+          }
+        ],
+        [
+          "PESD4V0Y1BSFYL",
+          2,
+          "SOD-962_L0.6-W0.3-BI",
+          "D1,D2",
+          {
+            "Contributor": "LCSC",
+            "Supplier": "LCSC",
+            "Supplier Part": "C552545",
+            "Manufacturer": "Nexperia(安世)",
+            "Manufacturer Part": "PESD4V0Y1BSFYL",
+            "JLCPCB Part Class": "Extended Part",
+            "spiceSymbolName": "PESD4V0Y1BSFYL",
+            "puuid": "84a1e960d3e140809694e2baf2d3869f",
+            "uuid": "1e679035a8a24b8387bb02534992006b"
+          }
+        ],
+        [
+          "BAT760-7",
+          1,
+          "SOD-323_L1.8-W1.3-LS2.5-RD",
+          "D3",
+          {
+            "Contributor": "LCSC",
+            "Supplier": "LCSC",
+            "Manufacturer": "DIODES(美台)",
+            "Manufacturer Part": "BAT760-7",
+            "Supplier Part": "C124187",
+            "JLCPCB Part Class": "Extended Part",
+            "spiceSymbolName": "BAT760-7",
+            "puuid": "dd3cfd4941c4479cb7f2c598e6fde06c",
+            "uuid": "b8c5a10329a840f7acc0818c2b15d15f"
+          }
+        ],
+        [
+          "LESD5D5.0CT1G",
+          3,
+          "SOD-523_L1.2-W0.8-LS1.6-BI",
+          "D4,D5,D6",
+          {
+            "Contributor": "LCSC",
+            "Supplier": "LCSC",
+            "Supplier Part": "C383211",
+            "Manufacturer": "LRC(乐山无线电)",
+            "Manufacturer Part": "LESD5D5.0CT1G",
+            "JLCPCB Part Class": "Extended Part",
+            "spiceSymbolName": "LESD5D5.0CT1G",
+            "puuid": "83d2c26c897548478611a7b637e39735",
+            "uuid": "02aff2ff6e514454bd8e9eaa83aa0cc7"
+          }
+        ],
+        [
+          "1TS002B-2500-5001",
+          2,
+          "SW-SMD_L6.0-W3.5-LS8.0",
+          "ENABLE,RESET",
+          {
+            "Contributor": "LCSC",
+            "Supplier": "LCSC",
+            "Supplier Part": "C255794",
+            "Manufacturer": "HYP(鸿源精密)",
+            "Manufacturer Part": "1TS002B-2500-5001-CT",
+            "JLCPCB Part Class": "Extended Part",
+            "spiceSymbolName": "1TS002B-2500-5001",
+            "puuid": "524261535adc40ac90a9dc60986604e6",
+            "uuid": "62545d909a434e90830927e050915e6d"
+          }
+        ],
+        [
+          "3V PIN",
+          1,
+          "HDR-M-2.54_1X2",
+          "J1",
+          {
+            "Supplier Part": "C124375",
+            "Supplier": "LCSC",
+            "Manufacturer": "",
+            "Manufacturer Part": "",
+            "Contributor": "LCEDA_Lib",
+            "spiceSymbolName": "HDR-M-2.54_1x2",
+            "Package Display": "No",
+            "puuid": "70aa5812f21f4991bf427395d51849f4",
+            "uuid": "a9aa2b14f188405792fa87ac344499a4"
+          }
+        ],
+        [
+          "HDR-M-2.54_1x3",
+          1,
+          "HDR-M-2.54_1X3",
+          "J2",
+          {
+            "Supplier Part": "C180248",
+            "Supplier": "LCSC",
+            "Manufacturer": "",
+            "Manufacturer Part": "",
+            "image": "",
+            "Contributor": "LCEDA_Lib",
+            "spiceSymbolName": "HDR-M-2.54_1x3",
+            "puuid": "9f77654394344f25b3de138e0fe05ff6",
+            "uuid": "a68dc5e6a9944c46b7604648a43dcd65"
+          }
+        ],
+        [
+          "HDR-M-2.54_1x4",
+          1,
+          "HDR-M-2.54_1X4",
+          "JTAG",
+          {
+            "Supplier Part": "C124378",
+            "Supplier": "LCSC",
+            "Manufacturer": "",
+            "Manufacturer Part": "",
+            "Contributor": "LCEDA_Lib",
+            "spiceSymbolName": "HDR-M-2.54_1x4",
+            "puuid": "282f7786cb6144d097ae00194c3e3fb3",
+            "uuid": "f5b1d9403e49471cab43bc5a1bec336f"
+          }
+        ],
+        [
+          "LED-0603_R",
+          5,
+          "LED0603_RED",
+          "POWER,RXT,TXT,VIBR,WIFI",
+          {
+            "Manufacturer": "LITEON(光宝)",
+            "Manufacturer Part": "LTST-C191KRKT",
+            "Supplier Part": "C125099",
+            "Supplier": "LCSC",
+            "link": "",
+            "Contributor": "LCEDA_01",
+            "spiceSymbolName": "LED-0603_R",
+            "puuid": "1efb3a885b5b4aecb6d41221a8f4d86b",
+            "uuid": "5cbe824183374fac8e4c1ae848199ce3"
+          }
+        ],
+        [
+          "SS8050-G",
+          2,
+          "SOT-23-3_L2.9-W1.3-P1.90-LS2.4-BR",
+          "Q1,Q2",
+          {
+            "Contributor": "LCSC",
+            "Supplier": "LCSC",
+            "Manufacturer": "CJ(江苏长电/长晶)",
+            "Manufacturer Part": "SS8050-G",
+            "Supplier Part": "C164886",
+            "JLCPCB Part Class": "Extended Part",
+            "spiceSymbolName": "SS8050-G",
+            "puuid": "bade90667a6e4731855e9a223387b8a6",
+            "uuid": "7f7e25e4080c4d5ea6b7eb27c71d581e"
+          }
+        ],
+        [
+          "2k/80mw",
+          1,
+          "R0603",
+          "R1",
+          {
+            "Supplier Part": "C22975",
+            "Supplier": "LCSC",
+            "Contributor": "LCEDA_Lib",
+            "spiceSymbolName": "R_0603_US",
+            "Manufacturer Part": "0603WAF2001T5E",
+            "Manufacturer": "UNI-ROYAL(厚声)",
+            "puuid": "398691f1f785460098bbe5ee6590333c",
+            "uuid": "b0248eb51e084227889f2cb84eab79c4"
+          }
+        ],
+        [
+          "10k/2mw",
+          5,
+          "R0603",
+          "R2,R6,R9,R10,R15",
+          {
+            "Supplier Part": "C25804",
+            "Supplier": "LCSC",
+            "Contributor": "LCEDA_Lib",
+            "spiceSymbolName": "R_0603_US",
+            "Manufacturer Part": "0603WAF1002T5E",
+            "Manufacturer": "UNI-ROYAL(厚声)",
+            "puuid": "398691f1f785460098bbe5ee6590333c",
+            "uuid": "b0248eb51e084227889f2cb84eab79c4"
+          }
+        ],
+        [
+          "22.1k/1mw",
+          1,
+          "R0603",
+          "R3",
+          {
+            "Supplier Part": "C25961",
+            "Supplier": "LCSC",
+            "Contributor": "LCEDA_Lib",
+            "spiceSymbolName": "R_0603_US",
+            "Manufacturer Part": "0603WAF2212T5E",
+            "Manufacturer": "UNI-ROYAL(厚声)",
+            "puuid": "398691f1f785460098bbe5ee6590333c",
+            "uuid": "b0248eb51e084227889f2cb84eab79c4"
+          }
+        ],
+        [
+          "47.5k/1mw",
+          1,
+          "R0603",
+          "R4",
+          {
+            "Supplier Part": "C23061",
+            "Supplier": "LCSC",
+            "Contributor": "LCEDA_Lib",
+            "spiceSymbolName": "R_0603_US",
+            "Manufacturer Part": "0603WAF4752T5E",
+            "Manufacturer": "UNI-ROYAL(厚声)",
+            "puuid": "398691f1f785460098bbe5ee6590333c",
+            "uuid": "b0248eb51e084227889f2cb84eab79c4"
+          }
+        ],
+        [
+          "1k/11mw",
+          5,
+          "R0603",
+          "R5,R13,R14,R16,R17",
+          {
+            "Supplier Part": "C21190",
+            "Supplier": "LCSC",
+            "Contributor": "LCEDA_Lib",
+            "spiceSymbolName": "R_0603_US",
+            "Manufacturer Part": "0603WAF1001T5E",
+            "Manufacturer": "UNI-ROYAL(厚声)",
+            "puuid": "398691f1f785460098bbe5ee6590333c",
+            "uuid": "b0248eb51e084227889f2cb84eab79c4"
+          }
+        ],
+        [
+          "0k",
+          4,
+          "R0603",
+          "R7,R8,R11,R12",
+          {
+            "Supplier Part": "C21189",
+            "Supplier": "LCSC",
+            "Contributor": "LCEDA_Lib",
+            "spiceSymbolName": "R_0603_US",
+            "Manufacturer Part": "0603WAF0000T5E",
+            "Manufacturer": "UNI-ROYAL(厚声)",
+            "puuid": "398691f1f785460098bbe5ee6590333c",
+            "uuid": "b0248eb51e084227889f2cb84eab79c4"
+          }
+        ],
+        [
+          "4.7k/3mw",
+          1,
+          "R0603",
+          "R18",
+          {
+            "Supplier Part": "C25999",
+            "Supplier": "LCSC",
+            "Contributor": "LCEDA_Lib",
+            "spiceSymbolName": "R_0603_US",
+            "Manufacturer Part": "0603WAJ0472T5E",
+            "Manufacturer": "UNI-ROYAL(厚声)",
+            "puuid": "398691f1f785460098bbe5ee6590333c",
+            "uuid": "b0248eb51e084227889f2cb84eab79c4"
+          }
+        ],
+        [
+          "ESP32-WROVER-E(16MB)_C701349",
+          1,
+          "WIFI-SMD_ESP32-WROVER-E",
+          "U1",
+          {
+            "Contributor": "LCSC",
+            "Supplier": "LCSC",
+            "Supplier Part": "C701349",
+            "Manufacturer": "ESPRESSIF(乐鑫)",
+            "Manufacturer Part": "ESP32-WROVER-E(16MB)",
+            "JLCPCB Part Class": "Extended Part",
+            "spiceSymbolName": "ESP32-WROVER-E(16MB)_C701349",
+            "puuid": "c3e8d3dd34de43e48b49712337278f28",
+            "uuid": "6c94291b8c6c49bca60cf69bc9ab25d9"
+          }
+        ],
+        [
+          "AMS1117-3.3",
+          1,
+          "SOT-223-3_L6.5-W3.4-P2.30-LS7.0-BR",
+          "U2",
+          {
+            "sourceId": "dwIGgezVh",
+            "timeStamp": "1476261164",
+            "Supplier": "LCSC",
+            "Manufacturer": "AMS",
+            "Manufacturer Part": "AMS1117-3.3",
+            "Supplier Part": "C6186",
+            "JLCPCB Part Class": "Basic Part",
+            "spiceSymbolName": "AMS1117-3.3",
+            "puuid": "02ae667aca734971be8a5f58143dd564",
+            "uuid": "588dac9f81df8f83843513972963b454"
+          }
+        ],
+        [
+          "CP2102N-A02-GQFN24",
+          1,
+          "QFN-24_L4.0-W4.0-P0.50-TL-EP2.5",
+          "U3",
+          {
+            "Contributor": "LCSC",
+            "Supplier": "LCSC",
+            "Supplier Part": "C1550551",
+            "Manufacturer": "SILICON LABS(芯科)",
+            "Manufacturer Part": "CP2102N-A02-GQFN24",
+            "JLCPCB Part Class": "Extended Part",
+            "spiceSymbolName": "CP2102N-A02-GQFN24",
+            "puuid": "02855d248e434f3cb829027fb3896c67",
+            "uuid": "f0e6be0b6dfb4ea58aca4b1747def383"
+          }
+        ],
+        [
+          "M2_MOUNTING_HOLE_PAD",
+          4,
+          "M2_MOUNTING_HOLE_PAD",
+          "U4,U5,U6,U7",
+          {
+            "Manufacturer": "null",
+            "Manufacturer Part": "M2*4*2.5",
+            "Supplier Part": "C9900010428",
+            "Supplier": "LCSC",
+            "link": "",
+            "Contributor": "Thomas Ardi",
+            "spiceSymbolName": "M2_MOUNTING_HOLE_PAD",
+            "puuid": "18efe4bdbeca4e26b171bcfd532e9de4",
+            "uuid": "08103482a30742c285d24fedb8ec7c4a"
+          }
+        ],
+        [
+          "U-F-M5DW-Y-2",
+          1,
+          "MICRO-USB-SMD_MICRO-USB-A12",
+          "USB1",
+          {
+            "Supplier": "LCSC",
+            "Manufacturer": "韩国韩荣",
+            "Manufacturer Part": "U-F-M5DW-Y-2",
+            "Supplier Part": "C105422",
+            "JLCPCB Part Class": "Extended Part",
+            "spiceSymbolName": "U-F-M5DW-Y-2",
+            "puuid": "f1471b3791fe4441a2434d76829b5710",
+            "uuid": "8746b6cb796f41cf8cbf4d20c17a7499"
+          }
+        ]
+      ],
+      "updateTime": 1704403377,
+      "createTime": 1703790446,
+      "histories": [],
+      "created_at": "2023-12-28 20:07:26",
+      "updated_at": "2024-01-04 22:22:57"
+    },
+    {
+      "uuid": "f060863526e17780f56241353d404f29",
+      "puuid": "a797e9031585abaf94ad2b2b8c4625c8",
+      "title": "pcb_mainboard",
+      "filename": "pcb_mainboard.json",
+      "description": "",
+      "docType": "3",
+      "master": "",
+      "thumb": "/images/thumb-default.png",
+      "components": {
+        "524261535adc40ac90a9dc60986604e6": 2,
+        "84a1e960d3e140809694e2baf2d3869f": 2,
+        "282f7786cb6144d097ae00194c3e3fb3": 1,
+        "f8151fdc728a41ebbc304e11d39e5437": 9,
+        "2ee8eb13a0124a108e622ce40c0c25a8": 1,
+        "398691f1f785460098bbe5ee6590333c": 18,
+        "9f77654394344f25b3de138e0fe05ff6": 1,
+        "18efe4bdbeca4e26b171bcfd532e9de4": 4,
+        "dd3cfd4941c4479cb7f2c598e6fde06c": 1,
+        "83d2c26c897548478611a7b637e39735": 3,
+        "70aa5812f21f4991bf427395d51849f4": 1,
+        "1efb3a885b5b4aecb6d41221a8f4d86b": 5,
+        "bade90667a6e4731855e9a223387b8a6": 2,
+        "c3e8d3dd34de43e48b49712337278f28": 1,
+        "02ae667aca734971be8a5f58143dd564": 1,
+        "02855d248e434f3cb829027fb3896c67": 1,
+        "f1471b3791fe4441a2434d76829b5710": 1
+      },
+      "BOM": [],
+      "updateTime": 1704404098,
+      "createTime": 1704128500,
+      "histories": [],
+      "created_at": "2024-01-01 18:01:40",
+      "updated_at": "2024-01-04 22:34:58"
+    }
+  ],
+  "sort": [
+    "cdf27a625d0cfe1e418d467dfb9c0cbf",
+    "a4de8224214b386455274b10b82ba844"
+  ],
+  "title": "Coffee Counter Rev1",
+  "foldername": "Coffee Counter Rev1",
+  "schfilename": "Coffee Counter Rev1.json",
+  "schfilemtime": 1706050477867
+}

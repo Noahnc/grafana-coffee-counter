@@ -1,15 +1,15 @@
 {
-  "uuid": "a797e9031585abaf94ad2b2b8c4625c8",
-  "path": "Offline/Coffee Counter",
-  "name": "Coffee Counter",
+  "uuid": "4050fa66fb54157f2232a11f7c9a2425",
+  "path": "Offline/Coffee Counter Rev2",
+  "name": "Coffee Counter Rev2",
   "content": "",
-  "created_at": "2023-12-25 17:09:59",
-  "updated_at": "2024-01-04 22:34:58",
+  "created_at": "2024-01-23 23:55:53",
+  "updated_at": "2024-02-19 22:00:29",
   "stick": "",
   "documents": [
     {
-      "uuid": "a4de8224214b386455274b10b82ba844",
-      "title": "PCB",
+      "uuid": "567d34bec9538d15c1fb07c59df596c4",
+      "title": "mainboard",
       "description": "",
       "docType": "1",
       "master": "",
@@ -17,21 +17,22 @@
       "components": {
         "6c94291b8c6c49bca60cf69bc9ab25d9": 1,
         "588dac9f81df8f83843513972963b454": 1,
-        "b0248eb51e084227889f2cb84eab79c4": 18,
-        "5cbe824183374fac8e4c1ae848199ce3": 5,
+        "b0248eb51e084227889f2cb84eab79c4": 20,
+        "5cbe824183374fac8e4c1ae848199ce3": 6,
         "24eeb2ceca08480b92b847b6a310acda": 9,
-        "a9aa2b14f188405792fa87ac344499a4": 1,
         "f0e6be0b6dfb4ea58aca4b1747def383": 1,
-        "8746b6cb796f41cf8cbf4d20c17a7499": 1,
-        "02aff2ff6e514454bd8e9eaa83aa0cc7": 3,
+        "02aff2ff6e514454bd8e9eaa83aa0cc7": 4,
         "b8c5a10329a840f7acc0818c2b15d15f": 1,
         "7f7e25e4080c4d5ea6b7eb27c71d581e": 2,
-        "a68dc5e6a9944c46b7604648a43dcd65": 1,
         "08103482a30742c285d24fedb8ec7c4a": 4,
         "b82150387a2041b4afd55b90c79c5923": 1,
         "62545d909a434e90830927e050915e6d": 2,
-        "1e679035a8a24b8387bb02534992006b": 2,
-        "f5b1d9403e49471cab43bc5a1bec336f": 1
+        "f5b1d9403e49471cab43bc5a1bec336f": 1,
+        "0cd2d82e8b0240878d00fbe140b5d9cc": 1,
+        "8edb2c097a6d4e4fa774be4f4c61d92b": 1,
+        "c7f56de31319481dbd4a8c66144725cf": 1,
+        "9698a5ebc38f435fb5a5f9ff5b84927c": 2,
+        "e6883fca5fda439bb687266d441e9408": 1
       },
       "BOM": [
         [
@@ -40,6 +41,23 @@
           "Package",
           "Components",
           "CustomPara"
+        ],
+        [
+          "1TS002B-2500-5001",
+          2,
+          "SW-SMD_L6.0-W3.5-LS8.0",
+          "BOOT,ENABLE",
+          {
+            "Contributor": "LCSC",
+            "Supplier": "LCSC",
+            "Supplier Part": "C255794",
+            "Manufacturer": "HYP(鸿源精密)",
+            "Manufacturer Part": "1TS002B-2500-5001-CT",
+            "JLCPCB Part Class": "Extended Part",
+            "spiceSymbolName": "1TS002B-2500-5001",
+            "puuid": "524261535adc40ac90a9dc60986604e6",
+            "uuid": "62545d909a434e90830927e050915e6d"
+          }
         ],
         [
           "22u/10v/20%",
@@ -76,9 +94,9 @@
         ],
         [
           "0.1u/50v/10%",
-          5,
+          4,
           "C0603",
-          "C4,C5,C6,C7,C9",
+          "C4,C5,C7,C9",
           {
             "Supplier Part": "C1591",
             "Supplier": "LCSC",
@@ -86,6 +104,21 @@
             "spiceSymbolName": "C_0603_US",
             "Manufacturer Part": "CL10B104KB8NNNC",
             "Manufacturer": "SAMSUNG(三星)",
+            "puuid": "f8151fdc728a41ebbc304e11d39e5437",
+            "uuid": "24eeb2ceca08480b92b847b6a310acda"
+          }
+        ],
+        [
+          "100n",
+          1,
+          "C0603",
+          "C6",
+          {
+            "Supplier Part": "",
+            "Supplier": "",
+            "Contributor": "LCEDA_Lib",
+            "spiceSymbolName": "C_0603_US",
+            "Manufacturer Part": "",
             "puuid": "f8151fdc728a41ebbc304e11d39e5437",
             "uuid": "24eeb2ceca08480b92b847b6a310acda"
           }
@@ -123,20 +156,37 @@
           }
         ],
         [
-          "PESD4V0Y1BSFYL",
-          2,
-          "SOD-962_L0.6-W0.3-BI",
-          "D1,D2",
+          "AU3321P1",
+          1,
+          "DFN1006-2L-BI",
+          "D1",
           {
             "Contributor": "LCSC",
             "Supplier": "LCSC",
-            "Supplier Part": "C552545",
-            "Manufacturer": "Nexperia(安世)",
-            "Manufacturer Part": "PESD4V0Y1BSFYL",
+            "Supplier Part": "C393855",
+            "Manufacturer": "Applied Power(应能微)",
+            "Manufacturer Part": "AU3321P1",
             "JLCPCB Part Class": "Extended Part",
-            "spiceSymbolName": "PESD4V0Y1BSFYL",
-            "puuid": "84a1e960d3e140809694e2baf2d3869f",
-            "uuid": "1e679035a8a24b8387bb02534992006b"
+            "spiceSymbolName": "AU3321P1",
+            "puuid": "80f0ce08d8934873be2e932dab3b719e",
+            "uuid": "0cd2d82e8b0240878d00fbe140b5d9cc"
+          }
+        ],
+        [
+          "LESD5D5.0CT1G",
+          4,
+          "SOD-523_L1.2-W0.8-LS1.6-BI",
+          "D2,D4,D5,D6",
+          {
+            "Contributor": "LCSC",
+            "Supplier": "LCSC",
+            "Supplier Part": "C383211",
+            "Manufacturer": "LRC(乐山无线电)",
+            "Manufacturer Part": "LESD5D5.0CT1G",
+            "JLCPCB Part Class": "Extended Part",
+            "spiceSymbolName": "LESD5D5.0CT1G",
+            "puuid": "83d2c26c897548478611a7b637e39735",
+            "uuid": "02aff2ff6e514454bd8e9eaa83aa0cc7"
           }
         ],
         [
@@ -157,71 +207,20 @@
           }
         ],
         [
-          "LESD5D5.0CT1G",
-          3,
-          "SOD-523_L1.2-W0.8-LS1.6-BI",
-          "D4,D5,D6",
-          {
-            "Contributor": "LCSC",
-            "Supplier": "LCSC",
-            "Supplier Part": "C383211",
-            "Manufacturer": "LRC(乐山无线电)",
-            "Manufacturer Part": "LESD5D5.0CT1G",
-            "JLCPCB Part Class": "Extended Part",
-            "spiceSymbolName": "LESD5D5.0CT1G",
-            "puuid": "83d2c26c897548478611a7b637e39735",
-            "uuid": "02aff2ff6e514454bd8e9eaa83aa0cc7"
-          }
-        ],
-        [
-          "1TS002B-2500-5001",
-          2,
-          "SW-SMD_L6.0-W3.5-LS8.0",
-          "ENABLE,RESET",
-          {
-            "Contributor": "LCSC",
-            "Supplier": "LCSC",
-            "Supplier Part": "C255794",
-            "Manufacturer": "HYP(鸿源精密)",
-            "Manufacturer Part": "1TS002B-2500-5001-CT",
-            "JLCPCB Part Class": "Extended Part",
-            "spiceSymbolName": "1TS002B-2500-5001",
-            "puuid": "524261535adc40ac90a9dc60986604e6",
-            "uuid": "62545d909a434e90830927e050915e6d"
-          }
-        ],
-        [
-          "3V PIN",
+          "DZ254W-11-03-65",
           1,
-          "HDR-M-2.54_1X2",
-          "J1",
-          {
-            "Supplier Part": "C124375",
-            "Supplier": "LCSC",
-            "Manufacturer": "",
-            "Manufacturer Part": "",
-            "Contributor": "LCEDA_Lib",
-            "spiceSymbolName": "HDR-M-2.54_1x2",
-            "Package Display": "No",
-            "puuid": "70aa5812f21f4991bf427395d51849f4",
-            "uuid": "a9aa2b14f188405792fa87ac344499a4"
-          }
-        ],
-        [
-          "HDR-M-2.54_1x3",
-          1,
-          "HDR-M-2.54_1X3",
+          "HDR-TH_3P-P2.54-H-M-W10.0",
           "J2",
           {
-            "Supplier Part": "C180248",
+            "Contributor": "LCSC",
             "Supplier": "LCSC",
-            "Manufacturer": "",
-            "Manufacturer Part": "",
-            "image": "",
-            "Contributor": "LCEDA_Lib",
-            "spiceSymbolName": "HDR-M-2.54_1x3",
-            "puuid": "9f77654394344f25b3de138e0fe05ff6",
-            "uuid": "a68dc5e6a9944c46b7604648a43dcd65"
+            "Supplier Part": "C2935928",
+            "Manufacturer": "DEALON(德艺隆)",
+            "Manufacturer Part": "DZ254W-11-03-65",
+            "JLCPCB Part Class": "Extended Part",
+            "spiceSymbolName": "DZ254W-11-03-65",
+            "puuid": "b40d6e4cbc1440108c4aae2ba3760d0b",
+            "uuid": "8edb2c097a6d4e4fa774be4f4c61d92b"
           }
         ],
         [
@@ -242,9 +241,9 @@
         ],
         [
           "LED-0603_R",
-          5,
+          6,
           "LED0603_RED",
-          "POWER,RXT,TXT,VIBR,WIFI",
+          "POWER,RXT,SYS,TXT,VIBR,WIFI",
           {
             "Manufacturer": "LITEON(光宝)",
             "Manufacturer Part": "LTST-C191KRKT",
@@ -292,9 +291,9 @@
         ],
         [
           "10k/2mw",
-          5,
+          4,
           "R0603",
-          "R2,R6,R9,R10,R15",
+          "R2,R9,R10,R15",
           {
             "Supplier Part": "C25804",
             "Supplier": "LCSC",
@@ -340,9 +339,9 @@
         ],
         [
           "1k/11mw",
-          5,
+          6,
           "R0603",
-          "R5,R13,R14,R16,R17",
+          "R5,R13,R14,R16,R17,R20",
           {
             "Supplier Part": "C21190",
             "Supplier": "LCSC",
@@ -350,6 +349,21 @@
             "spiceSymbolName": "R_0603_US",
             "Manufacturer Part": "0603WAF1001T5E",
             "Manufacturer": "UNI-ROYAL(厚声)",
+            "puuid": "398691f1f785460098bbe5ee6590333c",
+            "uuid": "b0248eb51e084227889f2cb84eab79c4"
+          }
+        ],
+        [
+          "5.1k/5V@1.5A,7.5w",
+          2,
+          "R0603",
+          "R6,R19",
+          {
+            "Supplier Part": "",
+            "Supplier": "",
+            "Contributor": "LCEDA_Lib",
+            "spiceSymbolName": "R_0603_US",
+            "Manufacturer Part": "",
             "puuid": "398691f1f785460098bbe5ee6590333c",
             "uuid": "b0248eb51e084227889f2cb84eab79c4"
           }
@@ -384,6 +398,21 @@
             "Manufacturer": "UNI-ROYAL(厚声)",
             "puuid": "398691f1f785460098bbe5ee6590333c",
             "uuid": "b0248eb51e084227889f2cb84eab79c4"
+          }
+        ],
+        [
+          "4.7k/3mv",
+          2,
+          "R0805",
+          "R21,R22",
+          {
+            "Supplier Part": "",
+            "Supplier": "",
+            "Contributor": "LCEDA_Lib",
+            "spiceSymbolName": "R_0805_US",
+            "Manufacturer Part": "",
+            "puuid": "b60f399a7a7e41848b2be1eb49c79141",
+            "uuid": "9698a5ebc38f435fb5a5f9ff5b84927c"
           }
         ],
         [
@@ -456,70 +485,88 @@
           }
         ],
         [
-          "U-F-M5DW-Y-2",
+          "SHT31-DIS-F2.5KS",
           1,
-          "MICRO-USB-SMD_MICRO-USB-A12",
-          "USB1",
+          "DFN-8_L2.5-W2.5-P0.50-BL-EP",
+          "U8",
           {
+            "Contributor": "LCSC",
             "Supplier": "LCSC",
-            "Manufacturer": "韩国韩荣",
-            "Manufacturer Part": "U-F-M5DW-Y-2",
-            "Supplier Part": "C105422",
+            "Supplier Part": "C453460",
+            "Manufacturer": "Sensirion(瑞士盛思锐)",
+            "Manufacturer Part": "Sht31-dis-f2.5ks",
             "JLCPCB Part Class": "Extended Part",
-            "spiceSymbolName": "U-F-M5DW-Y-2",
-            "puuid": "f1471b3791fe4441a2434d76829b5710",
-            "uuid": "8746b6cb796f41cf8cbf4d20c17a7499"
+            "spiceSymbolName": "SHT31-DIS-F2.5KS",
+            "puuid": "9e477ac8937f44909cca12c6e6d4924d",
+            "uuid": "c7f56de31319481dbd4a8c66144725cf"
+          }
+        ],
+        [
+          "TYPEC-304-ACP16",
+          1,
+          "USB-C-SMD_TYPE-C-16P-1",
+          "USBC",
+          {
+            "Contributor": "LCSC",
+            "Supplier": "LCSC",
+            "Supplier Part": "C2982555",
+            "Manufacturer": "XUNPU(讯普)",
+            "Manufacturer Part": "TYPEC-304-ACP16",
+            "JLCPCB Part Class": "Extended Part",
+            "spiceSymbolName": "TYPEC-304-ACP16",
+            "puuid": "09eecfa1b6c2480498bd28f23dec5832",
+            "uuid": "e6883fca5fda439bb687266d441e9408"
           }
         ]
       ],
-      "updateTime": 1704403377,
-      "createTime": 1703790446,
+      "updateTime": 1708374117,
+      "createTime": 1706050585,
       "histories": [],
-      "created_at": "2023-12-28 20:07:26",
-      "updated_at": "2024-01-04 22:22:57"
+      "created_at": "2024-01-23 23:56:25",
+      "updated_at": "2024-02-19 21:21:57"
     },
     {
-      "uuid": "f060863526e17780f56241353d404f29",
+      "uuid": "0ebc82b53cd69de3e2bc3aa88963b06b",
       "puuid": "a797e9031585abaf94ad2b2b8c4625c8",
-      "title": "PCB_Coffee Counter",
-      "filename": "PCB_Coffee Counter.json",
+      "title": "pcb_mainboard",
+      "filename": "pcb_mainboard.json",
       "description": "",
       "docType": "3",
       "master": "",
       "thumb": "/images/thumb-default.png",
       "components": {
-        "524261535adc40ac90a9dc60986604e6": 2,
-        "84a1e960d3e140809694e2baf2d3869f": 2,
-        "282f7786cb6144d097ae00194c3e3fb3": 1,
+        "09eecfa1b6c2480498bd28f23dec5832": 1,
+        "b60f399a7a7e41848b2be1eb49c79141": 2,
+        "9e477ac8937f44909cca12c6e6d4924d": 1,
         "f8151fdc728a41ebbc304e11d39e5437": 9,
+        "398691f1f785460098bbe5ee6590333c": 20,
+        "1efb3a885b5b4aecb6d41221a8f4d86b": 6,
+        "83d2c26c897548478611a7b637e39735": 4,
+        "524261535adc40ac90a9dc60986604e6": 2,
+        "b40d6e4cbc1440108c4aae2ba3760d0b": 1,
+        "80f0ce08d8934873be2e932dab3b719e": 1,
+        "282f7786cb6144d097ae00194c3e3fb3": 1,
         "2ee8eb13a0124a108e622ce40c0c25a8": 1,
-        "398691f1f785460098bbe5ee6590333c": 18,
-        "9f77654394344f25b3de138e0fe05ff6": 1,
         "18efe4bdbeca4e26b171bcfd532e9de4": 4,
         "dd3cfd4941c4479cb7f2c598e6fde06c": 1,
-        "83d2c26c897548478611a7b637e39735": 3,
-        "70aa5812f21f4991bf427395d51849f4": 1,
-        "1efb3a885b5b4aecb6d41221a8f4d86b": 5,
         "bade90667a6e4731855e9a223387b8a6": 2,
         "c3e8d3dd34de43e48b49712337278f28": 1,
         "02ae667aca734971be8a5f58143dd564": 1,
-        "02855d248e434f3cb829027fb3896c67": 1,
-        "f1471b3791fe4441a2434d76829b5710": 1
+        "02855d248e434f3cb829027fb3896c67": 1
       },
       "BOM": [],
-      "updateTime": 1704404098,
-      "createTime": 1704128500,
+      "updateTime": 1708376429,
+      "createTime": 1706050676,
       "histories": [],
-      "created_at": "2024-01-01 18:01:40",
-      "updated_at": "2024-01-04 22:34:58"
+      "created_at": "2024-01-23 23:57:56",
+      "updated_at": "2024-02-19 22:00:29"
     }
   ],
   "sort": [
-    "cdf27a625d0cfe1e418d467dfb9c0cbf",
-    "a4de8224214b386455274b10b82ba844"
+    "567d34bec9538d15c1fb07c59df596c4"
   ],
-  "title": "Coffee Counter",
-  "foldername": "Coffee Counter",
-  "schfilename": "Coffee Counter.json",
-  "schfilemtime": 1704403377173
+  "title": "Coffee Counter Rev2",
+  "foldername": "Coffee Counter Rev2",
+  "schfilename": "Coffee Counter Rev2.json",
+  "schfilemtime": 1708374117611
 }
