@@ -36,8 +36,12 @@
 // Pin to indicate WIFI status
 #define WIFI_STATUS_LED_VCC 26
 
-// PIN to indicate the system is booted (REV 2 only)
+// Pins to indicate the system is booted (REV 2 only)
 #define SYS_STATUS_LED_VCC 27
 
 // The number samples all time series can hold
 #define TIME_SERIES_SAMPLE_COUNT 10
+
+// Pins used for the I2C bus
+#define WIRE_PIN_SDA 32
+#define WIRE_PIN_SCL 33

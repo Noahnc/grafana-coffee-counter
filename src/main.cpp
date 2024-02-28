@@ -8,6 +8,8 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <Wire.h>
+#include <arduino-sht.h>
 #include <vibration.h>
 #include <transport.h>
 #include <prometheus_histogram.h>
@@ -22,6 +24,12 @@ void handleMetricsSend();
 void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value, String name);
 std::vector<std::string> setupLabels();
 std::string joinLabels(const std::vector<std::string> &strings);
+
+// I2C Bus & Temp/Humitity sensor
+// Do not use bus_num=0 here. Bus 0 seems already to be used by subcomponent of PrometheusArduino or PromLokiTransport.
+// Using Bus 1 instead.
+TwoWire wire = TwoWire(1); 
+SHTSensor *sht31 = nullptr;
 
 // Setup time variables
 int64_t start_time_unix_ms = 0;
@@ -90,6 +98,14 @@ void setup()
   req.addTimeSeries(*system_run_time_ms);
   req.addTimeSeries(*system_remote_write_failures_count);
 
+  // Setup I2C and temp/humitity sensor
+  // ToDo: Add conditional for init sht31 to support Rev1
+  wire.setPins(WIRE_PIN_SDA, WIRE_PIN_SCL);
+  wire.begin();
+  sht31 = new SHTSensor(SHTSensor::SHT3X);
+  sht31->init(wire);
+  sht31->setAccuracy(SHTSensor::SHT_ACCURACY_HIGH);
+
   // setup background task for vibration detection
   vibration = new Vibration(timer0, MOTION_DETECTION_DURATION_THREASHOLD_SECONDS * 1000, coffees_consumed);
   vibration->beginAsync();
@@ -120,6 +136,21 @@ void setup()
 void loop()
 {
   digitalWrite(SYS_STATUS_LED_VCC, LOW); // low indicates that the main thread is busy, rev2 only
+
+  // ToDo: migrate to prometheus metrics
+  // ToDo: Add conditional for init sht31 to support Rev1
+  if (sht31->readSample()) {
+      Serial.print("SHT:\n");
+      Serial.print("  RH: ");
+      Serial.print(sht31->getHumidity(), 2);
+      Serial.print("\n");
+      Serial.print("  T:  ");
+      Serial.print(sht31->getTemperature(), 2);
+      Serial.print("\n");
+  } else {
+      Serial.print("Error in readSample()\n");
+  }
+
 
   current_cicle_start_time_unix_ms = transport->getTimeMillis();
   run_time_ms = current_cicle_start_time_unix_ms - start_time_unix_ms;
