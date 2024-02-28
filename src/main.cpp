@@ -56,6 +56,7 @@ void setup()
   pinMode(VIBRATION_SENSOR_PIN, INPUT);
   pinMode(VIBRATION_DETECTION_LED_VCC, OUTPUT);
   pinMode(WIFI_STATUS_LED_VCC, OUTPUT);
+  pinMode(SYS_STATUS_LED_VCC, OUTPUT);
 
   // Setup serial
   Serial.begin(SERIAL_BAUD);
@@ -118,8 +119,7 @@ void setup()
 
 void loop()
 {
-  if (DEBUG)
-    Serial.println("Main loop");
+  digitalWrite(SYS_STATUS_LED_VCC, LOW); // low indicates that the main thread is busy, rev2 only
 
   current_cicle_start_time_unix_ms = transport->getTimeMillis();
   run_time_ms = current_cicle_start_time_unix_ms - start_time_unix_ms;
@@ -127,6 +127,7 @@ void loop()
   handleSampleIngestion();
   handleMetricsSend();
 
+  digitalWrite(SYS_STATUS_LED_VCC, HIGH);
   vTaskDelay(4000 / portTICK_PERIOD_MS);
 }
 
