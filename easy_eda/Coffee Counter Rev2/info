@@ -4,7 +4,7 @@
   "name": "Coffee Counter Rev2",
   "content": "",
   "created_at": "2024-01-23 23:55:53",
-  "updated_at": "2024-02-19 23:33:15",
+  "updated_at": "2024-02-21 23:30:29",
   "stick": "",
   "documents": [
     {
@@ -15,7 +15,6 @@
       "master": "",
       "thumb": "/images/thumb-default.png",
       "components": {
-        "6c94291b8c6c49bca60cf69bc9ab25d9": 1,
         "588dac9f81df8f83843513972963b454": 1,
         "b0248eb51e084227889f2cb84eab79c4": 20,
         "5cbe824183374fac8e4c1ae848199ce3": 6,
@@ -32,7 +31,8 @@
         "8edb2c097a6d4e4fa774be4f4c61d92b": 1,
         "c7f56de31319481dbd4a8c66144725cf": 1,
         "9698a5ebc38f435fb5a5f9ff5b84927c": 2,
-        "e6883fca5fda439bb687266d441e9408": 1
+        "e6883fca5fda439bb687266d441e9408": 1,
+        "aa68fdbb0ba14d999bc6c7389e2a90e7": 1
       },
       "BOM": [
         [
@@ -94,31 +94,16 @@
         ],
         [
           "0.1u/50v/10%",
-          4,
+          5,
           "C0603",
-          "C4,C5,C7,C9",
+          "C4,C5,C6,C7,C9",
           {
-            "Supplier Part": "C1591",
+            "Supplier Part": "C14663",
             "Supplier": "LCSC",
             "Contributor": "LCEDA_Lib",
             "spiceSymbolName": "C_0603_US",
-            "Manufacturer Part": "CL10B104KB8NNNC",
-            "Manufacturer": "SAMSUNG(三星)",
-            "puuid": "f8151fdc728a41ebbc304e11d39e5437",
-            "uuid": "24eeb2ceca08480b92b847b6a310acda"
-          }
-        ],
-        [
-          "100n",
-          1,
-          "C0603",
-          "C6",
-          {
-            "Supplier Part": "",
-            "Supplier": "",
-            "Contributor": "LCEDA_Lib",
-            "spiceSymbolName": "C_0603_US",
-            "Manufacturer Part": "",
+            "Manufacturer Part": "CC0603KRX7R9BB104",
+            "Manufacturer": "YAGEO(国巨)",
             "puuid": "f8151fdc728a41ebbc304e11d39e5437",
             "uuid": "24eeb2ceca08480b92b847b6a310acda"
           }
@@ -140,7 +125,7 @@
           }
         ],
         [
-          "0.100u/6.3v/20%",
+          "100u/6.3v/20%",
           1,
           "C0805",
           "C10",
@@ -359,11 +344,12 @@
           "R0603",
           "R6,R19",
           {
-            "Supplier Part": "",
-            "Supplier": "",
+            "Supplier Part": "C23186",
+            "Supplier": "LCSC",
             "Contributor": "LCEDA_Lib",
             "spiceSymbolName": "R_0603_US",
-            "Manufacturer Part": "",
+            "Manufacturer Part": "0603WAF5101T5E",
+            "Manufacturer": "UNI-ROYAL(厚声)",
             "puuid": "398691f1f785460098bbe5ee6590333c",
             "uuid": "b0248eb51e084227889f2cb84eab79c4"
           }
@@ -390,11 +376,11 @@
           "R0603",
           "R18",
           {
-            "Supplier Part": "C25999",
+            "Supplier Part": "C23162",
             "Supplier": "LCSC",
             "Contributor": "LCEDA_Lib",
             "spiceSymbolName": "R_0603_US",
-            "Manufacturer Part": "0603WAJ0472T5E",
+            "Manufacturer Part": "0603WAF4701T5E",
             "Manufacturer": "UNI-ROYAL(厚声)",
             "puuid": "398691f1f785460098bbe5ee6590333c",
             "uuid": "b0248eb51e084227889f2cb84eab79c4"
@@ -406,30 +392,31 @@
           "R0805",
           "R21,R22",
           {
-            "Supplier Part": "",
-            "Supplier": "",
+            "Supplier Part": "C17673",
+            "Supplier": "LCSC",
             "Contributor": "LCEDA_Lib",
             "spiceSymbolName": "R_0805_US",
-            "Manufacturer Part": "",
+            "Manufacturer Part": "0805W8F4701T5E",
+            "Manufacturer": "UNI-ROYAL(厚声)",
             "puuid": "b60f399a7a7e41848b2be1eb49c79141",
             "uuid": "9698a5ebc38f435fb5a5f9ff5b84927c"
           }
         ],
         [
-          "ESP32-WROVER-E(16MB)_C701349",
+          "ESP32-WROVER-E(16MB)",
           1,
-          "WIFI-SMD_ESP32-WROVER-E",
+          "WIFIM-SMD_39P-L31.4-W18.0-P1.27",
           "U1",
           {
             "Contributor": "LCSC",
             "Supplier": "LCSC",
-            "Supplier Part": "C701349",
+            "Supplier Part": "C529589",
             "Manufacturer": "ESPRESSIF(乐鑫)",
-            "Manufacturer Part": "ESP32-WROVER-E(16MB)",
+            "Manufacturer Part": "ESP32-WROVER-E-N16R8",
             "JLCPCB Part Class": "Extended Part",
-            "spiceSymbolName": "ESP32-WROVER-E(16MB)_C701349",
-            "puuid": "c3e8d3dd34de43e48b49712337278f28",
-            "uuid": "6c94291b8c6c49bca60cf69bc9ab25d9"
+            "spiceSymbolName": "ESP32-WROVER-E(16MB)",
+            "puuid": "4d9cc689a1754fc1a3a7e9bdfd6bc0b0",
+            "uuid": "aa68fdbb0ba14d999bc6c7389e2a90e7"
           }
         ],
         [
@@ -468,27 +455,10 @@
           }
         ],
         [
-          "M2_MOUNTING_HOLE_PAD",
-          4,
-          "M2_MOUNTING_HOLE_PAD",
-          "U4,U5,U6,U7",
-          {
-            "Manufacturer": "null",
-            "Manufacturer Part": "M2*4*2.5",
-            "Supplier Part": "C9900010428",
-            "Supplier": "LCSC",
-            "link": "",
-            "Contributor": "Thomas Ardi",
-            "spiceSymbolName": "M2_MOUNTING_HOLE_PAD",
-            "puuid": "18efe4bdbeca4e26b171bcfd532e9de4",
-            "uuid": "08103482a30742c285d24fedb8ec7c4a"
-          }
-        ],
-        [
           "SHT31-DIS-F2.5KS",
           1,
           "DFN-8_L2.5-W2.5-P0.50-BL-EP",
-          "U8",
+          "U4",
           {
             "Contributor": "LCSC",
             "Supplier": "LCSC",
@@ -499,6 +469,23 @@
             "spiceSymbolName": "SHT31-DIS-F2.5KS",
             "puuid": "9e477ac8937f44909cca12c6e6d4924d",
             "uuid": "c7f56de31319481dbd4a8c66144725cf"
+          }
+        ],
+        [
+          "M2_MOUNTING_HOLE_PAD",
+          4,
+          "M2_MOUNTING_HOLE_PAD",
+          "U5,U6,U7,U8",
+          {
+            "Manufacturer": "null",
+            "Manufacturer Part": "M2*4*2.5",
+            "Supplier Part": "C9900010428",
+            "Supplier": "LCSC",
+            "link": "",
+            "Contributor": "Thomas Ardi",
+            "spiceSymbolName": "M2_MOUNTING_HOLE_PAD",
+            "puuid": "18efe4bdbeca4e26b171bcfd532e9de4",
+            "uuid": "08103482a30742c285d24fedb8ec7c4a"
           }
         ],
         [
@@ -519,11 +506,11 @@
           }
         ]
       ],
-      "updateTime": 1708374117,
+      "updateTime": 1708554202,
       "createTime": 1706050585,
       "histories": [],
       "created_at": "2024-01-23 23:56:25",
-      "updated_at": "2024-02-19 21:21:57"
+      "updated_at": "2024-02-21 23:23:22"
     },
     {
       "uuid": "0ebc82b53cd69de3e2bc3aa88963b06b",
@@ -535,10 +522,13 @@
       "master": "",
       "thumb": "/images/thumb-default.png",
       "components": {
+        "4d9cc689a1754fc1a3a7e9bdfd6bc0b0": 1,
+        "f8151fdc728a41ebbc304e11d39e5437": 9,
+        "2ee8eb13a0124a108e622ce40c0c25a8": 1,
+        "9e477ac8937f44909cca12c6e6d4924d": 1,
+        "18efe4bdbeca4e26b171bcfd532e9de4": 4,
         "09eecfa1b6c2480498bd28f23dec5832": 1,
         "b60f399a7a7e41848b2be1eb49c79141": 2,
-        "9e477ac8937f44909cca12c6e6d4924d": 1,
-        "f8151fdc728a41ebbc304e11d39e5437": 9,
         "398691f1f785460098bbe5ee6590333c": 20,
         "1efb3a885b5b4aecb6d41221a8f4d86b": 6,
         "83d2c26c897548478611a7b637e39735": 4,
@@ -546,20 +536,17 @@
         "b40d6e4cbc1440108c4aae2ba3760d0b": 1,
         "80f0ce08d8934873be2e932dab3b719e": 1,
         "282f7786cb6144d097ae00194c3e3fb3": 1,
-        "2ee8eb13a0124a108e622ce40c0c25a8": 1,
-        "18efe4bdbeca4e26b171bcfd532e9de4": 4,
         "dd3cfd4941c4479cb7f2c598e6fde06c": 1,
         "bade90667a6e4731855e9a223387b8a6": 2,
-        "c3e8d3dd34de43e48b49712337278f28": 1,
         "02ae667aca734971be8a5f58143dd564": 1,
         "02855d248e434f3cb829027fb3896c67": 1
       },
       "BOM": [],
-      "updateTime": 1708381995,
+      "updateTime": 1708554629,
       "createTime": 1706050676,
       "histories": [],
       "created_at": "2024-01-23 23:57:56",
-      "updated_at": "2024-02-19 23:33:15"
+      "updated_at": "2024-02-21 23:30:29"
     }
   ],
   "sort": [
@@ -568,5 +555,5 @@
   "title": "Coffee Counter Rev2",
   "foldername": "Coffee Counter Rev2",
   "schfilename": "Coffee Counter Rev2.json",
-  "schfilemtime": 1708374117611
+  "schfilemtime": 1708554202483
 }
