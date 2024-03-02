@@ -9,6 +9,9 @@
 #define GC_USER ENV_GRAFANA_USER
 #define GC_PASS ENV_GRAFANA_PASSWORD
 
+// enable temperature and humidity sensor
+#define ENABLE_REV2_SENSORS ENV_ENABLE_REV2_SENSORS
+
 // Enable debug logging to serial
 #define DEBUG true
 #define SERIAL_BAUD MONITOR_SPEED

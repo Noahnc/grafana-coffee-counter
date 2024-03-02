@@ -13,6 +13,7 @@
 #include <vibration.h>
 #include <transport.h>
 #include <prometheus_histogram.h>
+#include <tuple>
 
 // Increase stack size for the main loop since the default 8192 bytes are not enough
 SET_LOOP_TASK_STACK_SIZE(32768);
@@ -24,11 +25,12 @@ void handleMetricsSend();
 void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value, String name);
 std::vector<std::string> setupLabels();
 std::string joinLabels(const std::vector<std::string> &strings);
+std::tuple<int, int> getTemperatureAndHumidity();
 
 // I2C Bus & Temp/Humitity sensor
 // Do not use bus_num=0 here. Bus 0 seems already to be used by subcomponent of PrometheusArduino or PromLokiTransport.
 // Using Bus 1 instead.
-TwoWire wire = TwoWire(1); 
+TwoWire wire = TwoWire(1);
 SHTSensor *sht31 = nullptr;
 
 // Setup time variables
@@ -42,7 +44,7 @@ int64_t last_remote_write_unix_ms = 0;
 int remote_write_failures = 0;
 
 // The write request that will be used to send the metrics to Prometheus. For every Histogram you need to add 3 + number of buckets timeseries
-WriteRequest req(19, 8192);
+WriteRequest req(21, 8192);
 
 // TimeSeries and labels
 const char *labels;
@@ -53,6 +55,8 @@ TimeSeries *system_network_wifi_rssi = nullptr;
 TimeSeries *system_largest_heap_block_size_bytes = nullptr;
 TimeSeries *system_run_time_ms = nullptr;
 TimeSeries *system_remote_write_failures_count = nullptr;
+TimeSeries *temperature = nullptr;
+TimeSeries *humidity = nullptr;
 
 // helper services
 hw_timer_t *timer0 = timerBegin(0, 80, true); // timer 0 of esp32 for vibration detection
@@ -98,13 +102,20 @@ void setup()
   req.addTimeSeries(*system_run_time_ms);
   req.addTimeSeries(*system_remote_write_failures_count);
 
-  // Setup I2C and temp/humitity sensor
-  // ToDo: Add conditional for init sht31 to support Rev1
-  wire.setPins(WIRE_PIN_SDA, WIRE_PIN_SCL);
-  wire.begin();
-  sht31 = new SHTSensor(SHTSensor::SHT3X);
-  sht31->init(wire);
-  sht31->setAccuracy(SHTSensor::SHT_ACCURACY_HIGH);
+  // Setup temperature and humidity sensor with metric if enabled
+  if (ENABLE_REV2_SENSORS)
+  {
+    temperature = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "temperature", labels);
+    humidity = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "humidity", labels);
+    req.addTimeSeries(*temperature);
+    req.addTimeSeries(*humidity);
+
+    wire.setPins(WIRE_PIN_SDA, WIRE_PIN_SCL);
+    wire.begin();
+    sht31 = new SHTSensor(SHTSensor::SHT3X);
+    sht31->init(wire);
+    sht31->setAccuracy(SHTSensor::SHT_ACCURACY_HIGH);
+  }
 
   // setup background task for vibration detection
   vibration = new Vibration(timer0, MOTION_DETECTION_DURATION_THREASHOLD_SECONDS * 1000, coffees_consumed);
@@ -135,22 +146,10 @@ void setup()
 
 void loop()
 {
-  digitalWrite(SYS_STATUS_LED_VCC, LOW); // low indicates that the main thread is busy, rev2 only
-
-  // ToDo: migrate to prometheus metrics
-  // ToDo: Add conditional for init sht31 to support Rev1
-  if (sht31->readSample()) {
-      Serial.print("SHT:\n");
-      Serial.print("  RH: ");
-      Serial.print(sht31->getHumidity(), 2);
-      Serial.print("\n");
-      Serial.print("  T:  ");
-      Serial.print(sht31->getTemperature(), 2);
-      Serial.print("\n");
-  } else {
-      Serial.print("Error in readSample()\n");
+  if (ENABLE_REV2_SENSORS)
+  {
+    digitalWrite(SYS_STATUS_LED_VCC, LOW); // low indicates that the main thread is busy, rev2 only
   }
-
 
   current_cicle_start_time_unix_ms = transport->getTimeMillis();
   run_time_ms = current_cicle_start_time_unix_ms - start_time_unix_ms;
@@ -236,6 +235,14 @@ void handleSampleIngestion()
   ingestMetricSample(*system_largest_heap_block_size_bytes, current_cicle_start_time_unix_ms, ESP.getMaxAllocHeap(), "largest_heap_block_bytes");
   ingestMetricSample(*system_run_time_ms, current_cicle_start_time_unix_ms, run_time_ms, "run_time_ms");
   ingestMetricSample(*system_remote_write_failures_count, current_cicle_start_time_unix_ms, remote_write_failures, "remote_write_failures_count");
+
+  if (ENABLE_REV2_SENSORS)
+  {
+    float temp, hum;
+    std::tie(temp, hum) = getTemperatureAndHumidity();
+    ingestMetricSample(*temperature, current_cicle_start_time_unix_ms, temp, "temperature");
+    ingestMetricSample(*humidity, current_cicle_start_time_unix_ms, hum, "humidity");
+  }
   last_metric_ingestion_unix_ms = transport->getTimeMillis();
 }
 
@@ -251,6 +258,16 @@ void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value, String
     if (DEBUG)
       Serial.println("Ingesting metrics: Failed to add sample" + String(ts.errmsg));
   }
+}
+
+std::tuple<int, int> getTemperatureAndHumidity()
+
+{
+  float temperature = sht31->getTemperature();
+  float humidity = sht31->getHumidity();
+  if (DEBUG)
+    Serial.println("Temperature: " + String(temperature) + " Humidity: " + String(humidity) + " at " + String(transport->getTimeMillis()) + " ms");
+  return std::make_tuple(temperature, humidity);
 }
 
 bool performRemoteWrite()
