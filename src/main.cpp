@@ -263,6 +263,7 @@ void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value, String
 std::tuple<int, int> getTemperatureAndHumidity()
 
 {
+  sht31->readSample();
   float temperature = sht31->getTemperature();
   float humidity = sht31->getHumidity();
   if (DEBUG)
