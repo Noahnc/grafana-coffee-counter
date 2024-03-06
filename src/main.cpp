@@ -105,8 +105,8 @@ void setup()
   // Setup temperature and humidity sensor with metric if enabled
   if (ENABLE_REV2_SENSORS)
   {
-    temperature = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "temperature", labels);
-    humidity = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "humidity", labels);
+    temperature = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "coffee_counter_temperature", labels);
+    humidity = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "coffee_counter_humidity", labels);
     req.addTimeSeries(*temperature);
     req.addTimeSeries(*humidity);
 
@@ -285,5 +285,7 @@ bool performRemoteWrite()
   system_largest_heap_block_size_bytes->resetSamples();
   system_run_time_ms->resetSamples();
   system_remote_write_failures_count->resetSamples();
+  temperature->resetSamples();
+  humidity->resetSamples();
   return true;
 }
