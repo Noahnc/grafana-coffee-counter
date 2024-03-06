@@ -44,7 +44,7 @@ int64_t last_remote_write_unix_ms = 0;
 int remote_write_failures = 0;
 
 // The write request that will be used to send the metrics to Prometheus. For every Histogram you need to add 3 + number of buckets timeseries
-WriteRequest req(21, 8192);
+WriteRequest req(21, 12288);
 
 // TimeSeries and labels
 const char *labels;
