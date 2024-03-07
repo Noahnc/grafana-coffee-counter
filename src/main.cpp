@@ -22,10 +22,10 @@ SET_LOOP_TASK_STACK_SIZE(32768);
 bool performRemoteWrite();
 void handleSampleIngestion();
 void handleMetricsSend();
-void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value, String name);
+void ingestMetricSample(TimeSeries &ts, int64_t timestamp, double value, String name);
 std::vector<std::string> setupLabels();
 std::string joinLabels(const std::vector<std::string> &strings);
-std::tuple<int, int> getTemperatureAndHumidity();
+std::tuple<double, double> getTemperatureAndHumidity();
 
 // I2C Bus & Temp/Humitity sensor
 // Do not use bus_num=0 here. Bus 0 seems already to be used by subcomponent of PrometheusArduino or PromLokiTransport.
@@ -238,7 +238,7 @@ void handleSampleIngestion()
 
   if (ENABLE_REV2_SENSORS)
   {
-    float temp, hum;
+    double temp, hum;
     std::tie(temp, hum) = getTemperatureAndHumidity();
     ingestMetricSample(*temperature, current_cicle_start_time_unix_ms, temp, "temperature");
     ingestMetricSample(*humidity, current_cicle_start_time_unix_ms, hum, "humidity");
@@ -246,7 +246,7 @@ void handleSampleIngestion()
   last_metric_ingestion_unix_ms = transport->getTimeMillis();
 }
 
-void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value, String name)
+void ingestMetricSample(TimeSeries &ts, int64_t timestamp, double value, String name)
 {
   if (ts.addSample(timestamp, value))
   {
@@ -255,17 +255,16 @@ void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value, String
   }
   else
   {
-    if (DEBUG)
-      Serial.println("Ingesting metrics: Failed to add sample" + String(ts.errmsg));
+    Serial.println("Ingesting metrics: Failed to add sample" + String(ts.errmsg));
   }
 }
 
-std::tuple<int, int> getTemperatureAndHumidity()
+std::tuple<double, double> getTemperatureAndHumidity()
 
 {
   sht31->readSample();
-  float temperature = sht31->getTemperature();
-  float humidity = sht31->getHumidity();
+  double temperature = sht31->getTemperature();
+  double humidity = sht31->getHumidity();
   if (DEBUG)
     Serial.println("Temperature: " + String(temperature) + " Humidity: " + String(humidity) + " at " + String(transport->getTimeMillis()) + " ms");
   return std::make_tuple(temperature, humidity);
