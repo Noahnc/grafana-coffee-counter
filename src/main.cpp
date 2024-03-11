@@ -14,6 +14,7 @@
 #include <transport.h>
 #include <prometheus_histogram.h>
 #include <tuple>
+#include "esp32-hal-cpu.h"
 
 // Increase stack size for the main loop since the default 8192 bytes are not enough
 SET_LOOP_TASK_STACK_SIZE(32768);
@@ -53,7 +54,7 @@ int64_t last_remote_write_unix_ms = 0;
 int remote_write_failures = 0;
 
 // The write request that will be used to send the metrics to Prometheus. For every Histogram you need to add 3 + number of buckets timeseries
-WriteRequest req(22, 12288);
+WriteRequest req(23, 12288);
 
 // TimeSeries and labels
 const char *labels;
@@ -65,6 +66,7 @@ TimeSeries *system_largest_heap_block_size_bytes = nullptr;
 TimeSeries *system_run_time_ms = nullptr;
 TimeSeries *system_remote_write_failures_count = nullptr;
 TimeSeries *system_cpu_temperature = nullptr;
+TimeSeries *system_cpu_clock = nullptr;
 TimeSeries *temperature = nullptr;
 TimeSeries *humidity = nullptr;
 
@@ -101,6 +103,7 @@ void setup()
   system_memory_total_bytes = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_memory_total_bytes", labels);
   system_network_wifi_rssi = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_network_wifi_rssi", labels);
   system_cpu_temperature = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_cpu_temperature_celsius", labels);
+  system_cpu_clock = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_cpu_clock_mhz", labels);
   system_largest_heap_block_size_bytes = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_largest_heap_block_size_bytes", labels);
   system_run_time_ms = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_run_time_ms", labels);
   system_remote_write_failures_count = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_remote_write_failures_count", labels);
@@ -113,6 +116,7 @@ void setup()
   req.addTimeSeries(*system_run_time_ms);
   req.addTimeSeries(*system_remote_write_failures_count);
   req.addTimeSeries(*system_cpu_temperature);
+  req.addTimeSeries(*system_cpu_clock);
 
   // Setup temperature and humidity sensor with metric if enabled
   if (ENABLE_REV2_SENSORS)
@@ -151,6 +155,10 @@ void setup()
   start_time_unix_ms = transport->getTimeMillis();
   last_metric_ingestion_unix_ms = start_time_unix_ms;
   last_remote_write_unix_ms = start_time_unix_ms;
+
+  // set lower CPU lock to reduce power consumtion and heat
+  setCpuFrequencyMhz(80);
+  Serial.println("Clock speed set to " + String(getCpuFrequencyMhz()) + "Mhz");
 
   if (DEBUG)
     Serial.println("Startup done");
@@ -248,6 +256,7 @@ void handleSampleIngestion()
   ingestMetricSample(*system_run_time_ms, current_cicle_start_time_unix_ms, run_time_ms, "run_time_ms");
   ingestMetricSample(*system_remote_write_failures_count, current_cicle_start_time_unix_ms, remote_write_failures, "remote_write_failures_count");
   ingestMetricSample(*system_cpu_temperature, current_cicle_start_time_unix_ms, (temprature_sens_read()-32)/1.8, "cpu_temperature_celsius");
+  ingestMetricSample(*system_cpu_clock, current_cicle_start_time_unix_ms, getCpuFrequencyMhz(), "cpu_clock_mhz");
 
   if (ENABLE_REV2_SENSORS)
   {
@@ -298,6 +307,7 @@ bool performRemoteWrite()
   system_run_time_ms->resetSamples();
   system_remote_write_failures_count->resetSamples();
   system_cpu_temperature->resetSamples();
+  system_cpu_clock->resetSamples();
   temperature->resetSamples();
   humidity->resetSamples();
   return true;
