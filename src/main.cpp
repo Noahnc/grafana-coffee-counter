@@ -19,6 +19,14 @@
 SET_LOOP_TASK_STACK_SIZE(32768);
 
 // Function prototypes
+#ifdef __cplusplus
+  extern "C" {
+#endif
+  uint8_t temprature_sens_read(); // ES32 provided function to read internal temperature
+#ifdef __cplusplus
+}
+#endif
+
 bool performRemoteWrite();
 void handleSampleIngestion();
 void handleMetricsSend();
@@ -26,6 +34,7 @@ void ingestMetricSample(TimeSeries &ts, int64_t timestamp, double value, String 
 std::vector<std::string> setupLabels();
 std::string joinLabels(const std::vector<std::string> &strings);
 std::tuple<double, double> getTemperatureAndHumidity();
+
 
 // I2C Bus & Temp/Humitity sensor
 // Do not use bus_num=0 here. Bus 0 seems already to be used by subcomponent of PrometheusArduino or PromLokiTransport.
@@ -44,7 +53,7 @@ int64_t last_remote_write_unix_ms = 0;
 int remote_write_failures = 0;
 
 // The write request that will be used to send the metrics to Prometheus. For every Histogram you need to add 3 + number of buckets timeseries
-WriteRequest req(21, 12288);
+WriteRequest req(22, 12288);
 
 // TimeSeries and labels
 const char *labels;
@@ -55,6 +64,7 @@ TimeSeries *system_network_wifi_rssi = nullptr;
 TimeSeries *system_largest_heap_block_size_bytes = nullptr;
 TimeSeries *system_run_time_ms = nullptr;
 TimeSeries *system_remote_write_failures_count = nullptr;
+TimeSeries *system_cpu_temperature = nullptr;
 TimeSeries *temperature = nullptr;
 TimeSeries *humidity = nullptr;
 
@@ -90,6 +100,7 @@ void setup()
   system_memory_free_bytes = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_memory_free_bytes", labels);
   system_memory_total_bytes = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_memory_total_bytes", labels);
   system_network_wifi_rssi = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_network_wifi_rssi", labels);
+  system_cpu_temperature = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_cpu_temperature_celsius", labels);
   system_largest_heap_block_size_bytes = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_largest_heap_block_size_bytes", labels);
   system_run_time_ms = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_run_time_ms", labels);
   system_remote_write_failures_count = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_remote_write_failures_count", labels);
@@ -101,6 +112,7 @@ void setup()
   req.addTimeSeries(*system_largest_heap_block_size_bytes);
   req.addTimeSeries(*system_run_time_ms);
   req.addTimeSeries(*system_remote_write_failures_count);
+  req.addTimeSeries(*system_cpu_temperature);
 
   // Setup temperature and humidity sensor with metric if enabled
   if (ENABLE_REV2_SENSORS)
@@ -235,6 +247,7 @@ void handleSampleIngestion()
   ingestMetricSample(*system_largest_heap_block_size_bytes, current_cicle_start_time_unix_ms, ESP.getMaxAllocHeap(), "largest_heap_block_bytes");
   ingestMetricSample(*system_run_time_ms, current_cicle_start_time_unix_ms, run_time_ms, "run_time_ms");
   ingestMetricSample(*system_remote_write_failures_count, current_cicle_start_time_unix_ms, remote_write_failures, "remote_write_failures_count");
+  ingestMetricSample(*system_cpu_temperature, current_cicle_start_time_unix_ms, (temprature_sens_read()-32)/1.8, "cpu_temperature_celsius");
 
   if (ENABLE_REV2_SENSORS)
   {
@@ -284,6 +297,7 @@ bool performRemoteWrite()
   system_largest_heap_block_size_bytes->resetSamples();
   system_run_time_ms->resetSamples();
   system_remote_write_failures_count->resetSamples();
+  system_cpu_temperature->resetSamples();
   temperature->resetSamples();
   humidity->resetSamples();
   return true;
