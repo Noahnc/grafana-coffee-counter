@@ -8,20 +8,40 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <Wire.h>
+#include <arduino-sht.h>
 #include <vibration.h>
 #include <transport.h>
 #include <prometheus_histogram.h>
+#include <tuple>
+#include "esp32-hal-cpu.h"
 
 // Increase stack size for the main loop since the default 8192 bytes are not enough
 SET_LOOP_TASK_STACK_SIZE(32768);
 
 // Function prototypes
+#ifdef __cplusplus
+  extern "C" {
+#endif
+  uint8_t temprature_sens_read(); // ES32 provided function to read internal temperature
+#ifdef __cplusplus
+}
+#endif
+
 bool performRemoteWrite();
 void handleSampleIngestion();
 void handleMetricsSend();
-void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value, String name);
+void ingestMetricSample(TimeSeries &ts, int64_t timestamp, double value, String name);
 std::vector<std::string> setupLabels();
 std::string joinLabels(const std::vector<std::string> &strings);
+std::tuple<double, double> getTemperatureAndHumidity();
+
+
+// I2C Bus & Temp/Humitity sensor
+// Do not use bus_num=0 here. Bus 0 seems already to be used by subcomponent of PrometheusArduino or PromLokiTransport.
+// Using Bus 1 instead.
+TwoWire wire = TwoWire(1);
+SHTSensor *sht31 = nullptr;
 
 // Setup time variables
 int64_t start_time_unix_ms = 0;
@@ -34,7 +54,7 @@ int64_t last_remote_write_unix_ms = 0;
 int remote_write_failures = 0;
 
 // The write request that will be used to send the metrics to Prometheus. For every Histogram you need to add 3 + number of buckets timeseries
-WriteRequest req(19, 8192);
+WriteRequest req(23, 12288);
 
 // TimeSeries and labels
 const char *labels;
@@ -45,6 +65,10 @@ TimeSeries *system_network_wifi_rssi = nullptr;
 TimeSeries *system_largest_heap_block_size_bytes = nullptr;
 TimeSeries *system_run_time_ms = nullptr;
 TimeSeries *system_remote_write_failures_count = nullptr;
+TimeSeries *system_cpu_temperature = nullptr;
+TimeSeries *system_cpu_clock = nullptr;
+TimeSeries *temperature = nullptr;
+TimeSeries *humidity = nullptr;
 
 // helper services
 hw_timer_t *timer0 = timerBegin(0, 80, true); // timer 0 of esp32 for vibration detection
@@ -78,6 +102,8 @@ void setup()
   system_memory_free_bytes = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_memory_free_bytes", labels);
   system_memory_total_bytes = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_memory_total_bytes", labels);
   system_network_wifi_rssi = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_network_wifi_rssi", labels);
+  system_cpu_temperature = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_cpu_temperature_celsius", labels);
+  system_cpu_clock = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_cpu_clock_mhz", labels);
   system_largest_heap_block_size_bytes = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_largest_heap_block_size_bytes", labels);
   system_run_time_ms = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_run_time_ms", labels);
   system_remote_write_failures_count = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "ESP32_system_remote_write_failures_count", labels);
@@ -89,6 +115,23 @@ void setup()
   req.addTimeSeries(*system_largest_heap_block_size_bytes);
   req.addTimeSeries(*system_run_time_ms);
   req.addTimeSeries(*system_remote_write_failures_count);
+  req.addTimeSeries(*system_cpu_temperature);
+  req.addTimeSeries(*system_cpu_clock);
+
+  // Setup temperature and humidity sensor with metric if enabled
+  if (ENABLE_REV2_SENSORS)
+  {
+    temperature = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "coffee_counter_temperature", labels);
+    humidity = new TimeSeries(TIME_SERIES_SAMPLE_COUNT, "coffee_counter_humidity", labels);
+    req.addTimeSeries(*temperature);
+    req.addTimeSeries(*humidity);
+
+    wire.setPins(WIRE_PIN_SDA, WIRE_PIN_SCL);
+    wire.begin();
+    sht31 = new SHTSensor(SHTSensor::SHT3X);
+    sht31->init(wire);
+    sht31->setAccuracy(SHTSensor::SHT_ACCURACY_HIGH);
+  }
 
   // setup background task for vibration detection
   vibration = new Vibration(timer0, MOTION_DETECTION_DURATION_THREASHOLD_SECONDS * 1000, coffees_consumed);
@@ -113,13 +156,20 @@ void setup()
   last_metric_ingestion_unix_ms = start_time_unix_ms;
   last_remote_write_unix_ms = start_time_unix_ms;
 
+  // set lower CPU lock to reduce power consumtion and heat
+  setCpuFrequencyMhz(80);
+  Serial.println("Clock speed set to " + String(getCpuFrequencyMhz()) + "Mhz");
+
   if (DEBUG)
     Serial.println("Startup done");
 };
 
 void loop()
 {
-  digitalWrite(SYS_STATUS_LED_VCC, LOW); // low indicates that the main thread is busy, rev2 only
+  if (ENABLE_REV2_SENSORS)
+  {
+    digitalWrite(SYS_STATUS_LED_VCC, LOW); // low indicates that the main thread is busy, rev2 only
+  }
 
   current_cicle_start_time_unix_ms = transport->getTimeMillis();
   run_time_ms = current_cicle_start_time_unix_ms - start_time_unix_ms;
@@ -205,10 +255,20 @@ void handleSampleIngestion()
   ingestMetricSample(*system_largest_heap_block_size_bytes, current_cicle_start_time_unix_ms, ESP.getMaxAllocHeap(), "largest_heap_block_bytes");
   ingestMetricSample(*system_run_time_ms, current_cicle_start_time_unix_ms, run_time_ms, "run_time_ms");
   ingestMetricSample(*system_remote_write_failures_count, current_cicle_start_time_unix_ms, remote_write_failures, "remote_write_failures_count");
+  ingestMetricSample(*system_cpu_temperature, current_cicle_start_time_unix_ms, (temprature_sens_read()-32)/1.8, "cpu_temperature_celsius");
+  ingestMetricSample(*system_cpu_clock, current_cicle_start_time_unix_ms, getCpuFrequencyMhz(), "cpu_clock_mhz");
+
+  if (ENABLE_REV2_SENSORS)
+  {
+    double temp, hum;
+    std::tie(temp, hum) = getTemperatureAndHumidity();
+    ingestMetricSample(*temperature, current_cicle_start_time_unix_ms, temp, "temperature");
+    ingestMetricSample(*humidity, current_cicle_start_time_unix_ms, hum, "humidity");
+  }
   last_metric_ingestion_unix_ms = transport->getTimeMillis();
 }
 
-void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value, String name)
+void ingestMetricSample(TimeSeries &ts, int64_t timestamp, double value, String name)
 {
   if (ts.addSample(timestamp, value))
   {
@@ -217,9 +277,19 @@ void ingestMetricSample(TimeSeries &ts, int64_t timestamp, int64_t value, String
   }
   else
   {
-    if (DEBUG)
-      Serial.println("Ingesting metrics: Failed to add sample" + String(ts.errmsg));
+    Serial.println("Ingesting metrics: Failed to add sample" + String(ts.errmsg));
   }
+}
+
+std::tuple<double, double> getTemperatureAndHumidity()
+
+{
+  sht31->readSample();
+  double temperature = sht31->getTemperature();
+  double humidity = sht31->getHumidity();
+  if (DEBUG)
+    Serial.println("Temperature: " + String(temperature) + " Humidity: " + String(humidity) + " at " + String(transport->getTimeMillis()) + " ms");
+  return std::make_tuple(temperature, humidity);
 }
 
 bool performRemoteWrite()
@@ -236,5 +306,9 @@ bool performRemoteWrite()
   system_largest_heap_block_size_bytes->resetSamples();
   system_run_time_ms->resetSamples();
   system_remote_write_failures_count->resetSamples();
+  system_cpu_temperature->resetSamples();
+  system_cpu_clock->resetSamples();
+  temperature->resetSamples();
+  humidity->resetSamples();
   return true;
 }

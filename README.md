@@ -28,6 +28,7 @@ build_flags =
 	-D ENV_WIFI_PASSWORD=\"<Wifi password>!\"
 	-D ENV_LABEL_SITE=\"<label value for label SITE>\"
 	-D ENV_LABEL_FLOOR=\"<labe value for label FLOOR>\"
+	-D ENV_ENABLE_REV2_SENSORS=\"<set true if rev2 board>\"
 ```
 
 ### Hardware & Schema
