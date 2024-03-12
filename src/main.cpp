@@ -15,6 +15,7 @@
 #include <prometheus_histogram.h>
 #include <tuple>
 #include "esp32-hal-cpu.h"
+#include "esp_sleep.h"
 
 // Increase stack size for the main loop since the default 8192 bytes are not enough
 SET_LOOP_TASK_STACK_SIZE(32768);
@@ -29,6 +30,8 @@ SET_LOOP_TASK_STACK_SIZE(32768);
 #endif
 
 bool performRemoteWrite();
+int64_t getNextMetricIngestionMs();
+int64_t getNextRemoteWriteMs();
 void handleSampleIngestion();
 void handleMetricsSend();
 void ingestMetricSample(TimeSeries &ts, int64_t timestamp, double value, String name);
@@ -75,12 +78,19 @@ hw_timer_t *timer0 = timerBegin(0, 80, true); // timer 0 of esp32 for vibration 
 Vibration *vibration = nullptr;
 Transport *transport = nullptr;
 
+int64_t lastWakeUp = 0;
+
 void setup()
 {
+  // Setup GPIOs
   pinMode(VIBRATION_SENSOR_PIN, INPUT);
   pinMode(VIBRATION_DETECTION_LED_VCC, OUTPUT);
   pinMode(WIFI_STATUS_LED_VCC, OUTPUT);
   pinMode(SYS_STATUS_LED_VCC, OUTPUT);
+
+  // Setup sleep wake up signals
+  esp_sleep_enable_ext0_wakeup(VIBRATION_SENSOR_PIN, 0); // active low
+  esp_sleep_enable_timer_wakeup(4 * 1000000); // 4 seconds
 
   // Setup serial
   Serial.begin(SERIAL_BAUD);
@@ -178,7 +188,26 @@ void loop()
   handleMetricsSend();
 
   digitalWrite(SYS_STATUS_LED_VCC, HIGH);
-  vTaskDelay(4000 / portTICK_PERIOD_MS);
+
+  int64_t nextWakeUp = std::min(getNextMetricIngestionMs(), getNextRemoteWriteMs());
+
+
+  if(nextWakeUp > 10000 && digitalRead(VIBRATION_SENSOR_PIN) != LOW)
+  {
+    esp_sleep_enable_timer_wakeup(nextWakeUp * 1000);
+    Serial.println("Enter sleep mode for " + String(nextWakeUp) + "ms");
+    Serial.flush();
+    esp_light_sleep_start();
+    Serial.println("Woke up from sleep mode");
+    transport->beginAsync();
+    lastWakeUp = transport->getTimeMillis();
+  }
+  else{
+    if(nextWakeUp > 0)
+    {
+      vTaskDelay(nextWakeUp / portTICK_PERIOD_MS);
+    }
+  }
 }
 
 std::vector<std::string> setupLabels()
@@ -210,9 +239,19 @@ std::string joinLabels(const std::vector<std::string> &strings)
   return joined.str();
 }
 
+int64_t getNextRemoteWriteMs(){
+  int64_t next_remote_write_ms = last_remote_write_unix_ms + (REMOTE_WRITE_INTERVAL_SECONDS * 1000) - current_cicle_start_time_unix_ms;
+  return next_remote_write_ms;
+}
+
+int64_t getNextMetricIngestionMs(){
+  int64_t next_ingestion_ms = last_metric_ingestion_unix_ms + (METRICS_INGESTION_RATE_SECONDS * 1000) - current_cicle_start_time_unix_ms;
+  return next_ingestion_ms;
+}
+
 void handleMetricsSend()
 {
-  int64_t next_remote_write_ms = last_remote_write_unix_ms + (REMOTE_WRITE_INTERVAL_SECONDS * 1000) - current_cicle_start_time_unix_ms;
+  int64_t next_remote_write_ms = getNextRemoteWriteMs();
   if (next_remote_write_ms > 0)
   {
     if (DEBUG)
@@ -222,6 +261,10 @@ void handleMetricsSend()
 
   if (DEBUG)
     Serial.println("Performing remote write");
+
+  while(WiFi.status() != WL_CONNECTED){
+    vTaskDelay(100 / portTICK_PERIOD_MS);
+  }
 
   bool success = performRemoteWrite();
   if (!success)
@@ -238,7 +281,7 @@ void handleMetricsSend()
 
 void handleSampleIngestion()
 {
-  int64_t next_ingestion_ms = last_metric_ingestion_unix_ms + (METRICS_INGESTION_RATE_SECONDS * 1000) - current_cicle_start_time_unix_ms;
+  int64_t next_ingestion_ms = getNextMetricIngestionMs();
   if (next_ingestion_ms > 0)
   {
     if (DEBUG)

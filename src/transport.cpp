@@ -75,10 +75,6 @@ int64_t Transport::getTimeMillis()
             xSemaphoreGive(semaphore);
         }
     }
-    if (debug != nullptr)
-    {
-        debug->printf("getTimeMillis: %jd\n", result);
-    }
     return result;
 }
 
@@ -94,6 +90,16 @@ PromClient::SendResult Transport::send(WriteRequest &req)
 
 void Transport::beginAsync()
 {
+    if (connectTaskHandle != NULL)
+    {
+        vTaskDelete(connectTaskHandle);
+    }
+    if (blinkTaskHandle != NULL)
+    {
+        vTaskDelete(blinkTaskHandle);
+        blinkTaskHandle = NULL;
+    }
+
     digitalWrite(wifiStatusPin, LOW);
     xTaskCreatePinnedToCore(
         Transport::connectTask,

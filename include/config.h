@@ -32,7 +32,7 @@
 #define MOTION_DETECTION_DURATION_THREASHOLD_SECONDS 8
 
 // Pin to which the vibration sensor is connected
-#define VIBRATION_SENSOR_PIN 36
+#define VIBRATION_SENSOR_PIN GPIO_NUM_36
 // Pin connected to a LED to indicated that vibration is detected
 #define VIBRATION_DETECTION_LED_VCC 25
 
