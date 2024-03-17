@@ -16,13 +16,15 @@
 #include <tuple>
 #include "esp32-hal-cpu.h"
 #include "esp_sleep.h"
+#include "esp_wifi.h"
 
 // Increase stack size for the main loop since the default 8192 bytes are not enough
 SET_LOOP_TASK_STACK_SIZE(32768);
 
 // Function prototypes
 #ifdef __cplusplus
-  extern "C" {
+extern "C"
+{
 #endif
   uint8_t temprature_sens_read(); // ES32 provided function to read internal temperature
 #ifdef __cplusplus
@@ -30,15 +32,13 @@ SET_LOOP_TASK_STACK_SIZE(32768);
 #endif
 
 bool performRemoteWrite();
-int64_t getNextMetricIngestionMs();
-int64_t getNextRemoteWriteMs();
-void handleSampleIngestion();
+void doLightSleep(int duration_ms);
+void handleSampleIngestion(int64_t current_cicle_start_time_unix_ms, int64_t run_time_ms);
 void handleMetricsSend();
 void ingestMetricSample(TimeSeries &ts, int64_t timestamp, double value, String name);
 std::vector<std::string> setupLabels();
 std::string joinLabels(const std::vector<std::string> &strings);
 std::tuple<double, double> getTemperatureAndHumidity();
-
 
 // I2C Bus & Temp/Humitity sensor
 // Do not use bus_num=0 here. Bus 0 seems already to be used by subcomponent of PrometheusArduino or PromLokiTransport.
@@ -48,8 +48,6 @@ SHTSensor *sht31 = nullptr;
 
 // Setup time variables
 int64_t start_time_unix_ms = 0;
-int64_t run_time_ms = 0;
-int64_t current_cicle_start_time_unix_ms = 0;
 int64_t last_metric_ingestion_unix_ms = 0;
 int64_t last_remote_write_unix_ms = 0;
 
@@ -78,8 +76,6 @@ hw_timer_t *timer0 = timerBegin(0, 80, true); // timer 0 of esp32 for vibration 
 Vibration *vibration = nullptr;
 Transport *transport = nullptr;
 
-int64_t lastWakeUp = 0;
-
 void setup()
 {
   // Setup GPIOs
@@ -87,10 +83,6 @@ void setup()
   pinMode(VIBRATION_DETECTION_LED_VCC, OUTPUT);
   pinMode(WIFI_STATUS_LED_VCC, OUTPUT);
   pinMode(SYS_STATUS_LED_VCC, OUTPUT);
-
-  // Setup sleep wake up signals
-  esp_sleep_enable_ext0_wakeup(VIBRATION_SENSOR_PIN, 0); // active low
-  esp_sleep_enable_timer_wakeup(4 * 1000000); // 4 seconds
 
   // Setup serial
   Serial.begin(SERIAL_BAUD);
@@ -167,46 +159,52 @@ void setup()
   last_remote_write_unix_ms = start_time_unix_ms;
 
   // set lower CPU lock to reduce power consumtion and heat
-  setCpuFrequencyMhz(80);
+  setCpuFrequencyMhz(RTC_CPU_FREQ_LOW);
+  Serial.updateBaudRate(SERIAL_BAUD);
   Serial.println("Clock speed set to " + String(getCpuFrequencyMhz()) + "Mhz");
 
+  digitalWrite(SYS_STATUS_LED_VCC, HIGH);
   if (DEBUG)
     Serial.println("Startup done");
 };
 
 void loop()
 {
-  if (ENABLE_REV2_SENSORS)
+  int64_t current_cicle_start_time_unix_ms = transport->getTimeMillis();
+  int64_t next_remote_write_ms = last_remote_write_unix_ms + (REMOTE_WRITE_INTERVAL_SECONDS * 1000) - current_cicle_start_time_unix_ms;
+  int64_t next_ingestion_ms = last_metric_ingestion_unix_ms + (METRICS_INGESTION_RATE_SECONDS * 1000) - current_cicle_start_time_unix_ms;
+  int64_t run_time_ms = current_cicle_start_time_unix_ms - start_time_unix_ms;
+
+  if (DEBUG)
   {
-    digitalWrite(SYS_STATUS_LED_VCC, LOW); // low indicates that the main thread is busy, rev2 only
+    Serial.println("Next metric ingestion in " + String(next_ingestion_ms / 1000) + " seconds");
+    Serial.println("Next remote write in " + String(next_remote_write_ms / 1000) + " seconds");
   }
 
-  current_cicle_start_time_unix_ms = transport->getTimeMillis();
-  run_time_ms = current_cicle_start_time_unix_ms - start_time_unix_ms;
-
-  handleSampleIngestion();
-  handleMetricsSend();
-
-  digitalWrite(SYS_STATUS_LED_VCC, HIGH);
-
-  int64_t nextWakeUp = std::min(getNextMetricIngestionMs(), getNextRemoteWriteMs());
-
-
-  if(nextWakeUp > 10000 && digitalRead(VIBRATION_SENSOR_PIN) != LOW)
+  if (next_ingestion_ms <= 0)
   {
-    esp_sleep_enable_timer_wakeup(nextWakeUp * 1000);
-    Serial.println("Enter sleep mode for " + String(nextWakeUp) + "ms");
-    Serial.flush();
-    esp_light_sleep_start();
-    Serial.println("Woke up from sleep mode");
-    transport->beginAsync();
-    lastWakeUp = transport->getTimeMillis();
+    handleSampleIngestion(current_cicle_start_time_unix_ms, run_time_ms);
   }
-  else{
-    if(nextWakeUp > 0)
-    {
-      vTaskDelay(nextWakeUp / portTICK_PERIOD_MS);
-    }
+  if (next_remote_write_ms <= 0)
+  {
+    setCpuFrequencyMhz(RTC_CPU_FREQ_HIGH);
+    Serial.updateBaudRate(SERIAL_BAUD);
+    transport->beginAsync(); // ensure transport after light sleep
+    handleMetricsSend();
+    //transport->stop();
+    setCpuFrequencyMhz(RTC_CPU_FREQ_LOW);
+    Serial.updateBaudRate(SERIAL_BAUD);
+  }
+
+  int64_t next_wake_up = std::min(next_ingestion_ms, next_remote_write_ms);
+  if (next_wake_up > 5000 && digitalRead(VIBRATION_SENSOR_PIN) != LOW)
+  {
+    transport->stop();
+    doLightSleep(next_wake_up);
+  }
+  else if (next_wake_up > 0)
+  {
+    vTaskDelay(next_wake_up / portTICK_PERIOD_MS);
   }
 }
 
@@ -239,31 +237,40 @@ std::string joinLabels(const std::vector<std::string> &strings)
   return joined.str();
 }
 
-int64_t getNextRemoteWriteMs(){
-  int64_t next_remote_write_ms = last_remote_write_unix_ms + (REMOTE_WRITE_INTERVAL_SECONDS * 1000) - current_cicle_start_time_unix_ms;
-  return next_remote_write_ms;
-}
-
-int64_t getNextMetricIngestionMs(){
-  int64_t next_ingestion_ms = last_metric_ingestion_unix_ms + (METRICS_INGESTION_RATE_SECONDS * 1000) - current_cicle_start_time_unix_ms;
-  return next_ingestion_ms;
+void doLightSleep(int duration_ms)
+{
+  esp_sleep_enable_ext0_wakeup(VIBRATION_SENSOR_PIN, 0); // active low
+  esp_sleep_enable_timer_wakeup(duration_ms * 1000);
+  Serial.println("Enter sleep mode for " + String(duration_ms) + "ms");
+  Serial.flush();
+  // For some reason, ESP32 can't sometimes reconnect wifi after light sleep.
+  // Calling esp_wifi_stop before and esp_wifi_start after light sleep seems prevent this issue
+  esp_wifi_stop();
+  digitalWrite(SYS_STATUS_LED_VCC, LOW);
+  esp_light_sleep_start();
+  digitalWrite(SYS_STATUS_LED_VCC, HIGH);
+  esp_wifi_start();
+  Serial.println("Woke up from sleep mode");
 }
 
 void handleMetricsSend()
 {
-  int64_t next_remote_write_ms = getNextRemoteWriteMs();
-  if (next_remote_write_ms > 0)
-  {
-    if (DEBUG)
-      Serial.println("Next remote write in " + String(next_remote_write_ms / 1000) + " seconds");
-    return;
-  }
-
   if (DEBUG)
     Serial.println("Performing remote write");
 
-  while(WiFi.status() != WL_CONNECTED){
-    vTaskDelay(100 / portTICK_PERIOD_MS);
+  // wait for wifi to be connected
+  int wait_cycle = 0;
+  while (WiFi.status() != WL_CONNECTED && wait_cycle < 40)
+  {
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+    wait_cycle++;
+  }
+  if (WiFi.status() != WL_CONNECTED)
+  {
+    remote_write_failures++;
+    if (DEBUG)
+      Serial.println("Remote Write failed, Wifi not connected");
+    return;
   }
 
   bool success = performRemoteWrite();
@@ -279,15 +286,8 @@ void handleMetricsSend()
   last_remote_write_unix_ms = transport->getTimeMillis();
 }
 
-void handleSampleIngestion()
+void handleSampleIngestion(int64_t current_cicle_start_time_unix_ms, int64_t run_time_ms)
 {
-  int64_t next_ingestion_ms = getNextMetricIngestionMs();
-  if (next_ingestion_ms > 0)
-  {
-    if (DEBUG)
-      Serial.println("Next metric ingestion in " + String(next_ingestion_ms / 1000) + " seconds");
-    return;
-  }
   if (DEBUG)
     Serial.println("Ingesting metrics");
 
@@ -298,7 +298,7 @@ void handleSampleIngestion()
   ingestMetricSample(*system_largest_heap_block_size_bytes, current_cicle_start_time_unix_ms, ESP.getMaxAllocHeap(), "largest_heap_block_bytes");
   ingestMetricSample(*system_run_time_ms, current_cicle_start_time_unix_ms, run_time_ms, "run_time_ms");
   ingestMetricSample(*system_remote_write_failures_count, current_cicle_start_time_unix_ms, remote_write_failures, "remote_write_failures_count");
-  ingestMetricSample(*system_cpu_temperature, current_cicle_start_time_unix_ms, (temprature_sens_read()-32)/1.8, "cpu_temperature_celsius");
+  ingestMetricSample(*system_cpu_temperature, current_cicle_start_time_unix_ms, (temprature_sens_read() - 32) / 1.8, "cpu_temperature_celsius");
   ingestMetricSample(*system_cpu_clock, current_cicle_start_time_unix_ms, getCpuFrequencyMhz(), "cpu_clock_mhz");
 
   if (ENABLE_REV2_SENSORS)
@@ -325,13 +325,10 @@ void ingestMetricSample(TimeSeries &ts, int64_t timestamp, double value, String 
 }
 
 std::tuple<double, double> getTemperatureAndHumidity()
-
 {
   sht31->readSample();
   double temperature = sht31->getTemperature();
   double humidity = sht31->getHumidity();
-  if (DEBUG)
-    Serial.println("Temperature: " + String(temperature) + " Humidity: " + String(humidity) + " at " + String(transport->getTimeMillis()) + " ms");
   return std::make_tuple(temperature, humidity);
 }
 
