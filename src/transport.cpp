@@ -18,6 +18,7 @@ Transport::~Transport()
     if (connectTaskHandle != NULL)
     {
         vTaskDelete(connectTaskHandle);
+        connectTaskHandle = NULL;
     }
     if (blinkTaskHandle != NULL)
     {
@@ -88,19 +89,27 @@ PromClient::SendResult Transport::send(WriteRequest &req)
     return res;
 }
 
-void Transport::beginAsync()
+void Transport::stop()
 {
     if (connectTaskHandle != NULL)
     {
         vTaskDelete(connectTaskHandle);
+        connectTaskHandle = NULL;
     }
     if (blinkTaskHandle != NULL)
     {
         vTaskDelete(blinkTaskHandle);
         blinkTaskHandle = NULL;
     }
-
     digitalWrite(wifiStatusPin, LOW);
+}
+
+void Transport::beginAsync()
+{
+    if(connectTaskHandle != NULL)
+    {
+        return;
+    }
     xTaskCreatePinnedToCore(
         Transport::connectTask,
         "transport connect",
@@ -159,8 +168,7 @@ void Transport::connectTask(void *args)
         }
 
         // update LED status and try to reconnect if required
-        wl_status_t wifiStatus = WiFi.status();
-        if (wifiStatus == WL_CONNECTED)
+        if (WiFi.status() == WL_CONNECTED)
         {
             int8_t dbm = WiFi.RSSI();
             if (instance->debug != nullptr)

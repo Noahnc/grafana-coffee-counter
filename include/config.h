@@ -48,3 +48,7 @@
 // Pins used for the I2C bus
 #define WIRE_PIN_SDA 32
 #define WIRE_PIN_SCL 33
+
+// clock frequencies (mhz) for the MCU
+#define RTC_CPU_FREQ_HIGH 80
+#define RTC_CPU_FREQ_LOW 20

@@ -16,6 +16,7 @@ public:
     void setCredentials(const char *user, const char *pass);
     void setDebug(Stream &stream);
     void beginAsync();
+    void stop();
     bool isInitialized();
     int64_t getTimeMillis();
     PromClient::SendResult send(WriteRequest &req);
