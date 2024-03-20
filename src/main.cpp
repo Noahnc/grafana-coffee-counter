@@ -16,7 +16,6 @@
 #include <tuple>
 #include "esp32-hal-cpu.h"
 #include "esp_sleep.h"
-#include "esp_wifi.h"
 
 // Increase stack size for the main loop since the default 8192 bytes are not enough
 SET_LOOP_TASK_STACK_SIZE(32768);
@@ -36,6 +35,8 @@ void doLightSleep(int duration_ms);
 void handleSampleIngestion(int64_t current_cicle_start_time_unix_ms, int64_t run_time_ms);
 void handleMetricsSend();
 void ingestMetricSample(TimeSeries &ts, int64_t timestamp, double value, String name);
+void setCpuLow();
+void setCpuHigh();
 std::vector<std::string> setupLabels();
 std::string joinLabels(const std::vector<std::string> &strings);
 std::tuple<double, double> getTemperatureAndHumidity();
@@ -158,11 +159,7 @@ void setup()
   last_metric_ingestion_unix_ms = start_time_unix_ms;
   last_remote_write_unix_ms = start_time_unix_ms;
 
-  // set lower CPU lock to reduce power consumtion and heat
-  setCpuFrequencyMhz(RTC_CPU_FREQ_LOW);
-  Serial.updateBaudRate(SERIAL_BAUD);
-  Serial.println("Clock speed set to " + String(getCpuFrequencyMhz()) + "Mhz");
-
+  setCpuLow();
   digitalWrite(SYS_STATUS_LED_VCC, HIGH);
   if (DEBUG)
     Serial.println("Startup done");
@@ -187,13 +184,11 @@ void loop()
   }
   if (next_remote_write_ms <= 0)
   {
-    setCpuFrequencyMhz(RTC_CPU_FREQ_HIGH);
-    Serial.updateBaudRate(SERIAL_BAUD);
+    setCpuHigh();
     transport->beginAsync(); // ensure transport after light sleep
     handleMetricsSend();
-    //transport->stop();
-    setCpuFrequencyMhz(RTC_CPU_FREQ_LOW);
-    Serial.updateBaudRate(SERIAL_BAUD);
+    transport->stop();
+    setCpuLow();
   }
 
   int64_t next_wake_up = std::min(next_ingestion_ms, next_remote_write_ms);
@@ -243,13 +238,9 @@ void doLightSleep(int duration_ms)
   esp_sleep_enable_timer_wakeup(duration_ms * 1000);
   Serial.println("Enter sleep mode for " + String(duration_ms) + "ms");
   Serial.flush();
-  // For some reason, ESP32 can't sometimes reconnect wifi after light sleep.
-  // Calling esp_wifi_stop before and esp_wifi_start after light sleep seems prevent this issue
-  esp_wifi_stop();
   digitalWrite(SYS_STATUS_LED_VCC, LOW);
   esp_light_sleep_start();
   digitalWrite(SYS_STATUS_LED_VCC, HIGH);
-  esp_wifi_start();
   Serial.println("Woke up from sleep mode");
 }
 
@@ -259,13 +250,7 @@ void handleMetricsSend()
     Serial.println("Performing remote write");
 
   // wait for wifi to be connected
-  int wait_cycle = 0;
-  while (WiFi.status() != WL_CONNECTED && wait_cycle < 40)
-  {
-    vTaskDelay(500 / portTICK_PERIOD_MS);
-    wait_cycle++;
-  }
-  if (WiFi.status() != WL_CONNECTED)
+  if (!transport->awaitConnectedWifi(20))
   {
     remote_write_failures++;
     if (DEBUG)
@@ -294,7 +279,7 @@ void handleSampleIngestion(int64_t current_cicle_start_time_unix_ms, int64_t run
   coffees_consumed->Ingest(current_cicle_start_time_unix_ms);
   ingestMetricSample(*system_memory_free_bytes, current_cicle_start_time_unix_ms, ESP.getFreeHeap(), "free_heap_bytes");
   ingestMetricSample(*system_memory_total_bytes, current_cicle_start_time_unix_ms, ESP.getHeapSize(), "total_heap_bytes");
-  ingestMetricSample(*system_network_wifi_rssi, current_cicle_start_time_unix_ms, WiFi.RSSI(), "wifi_rssi");
+  ingestMetricSample(*system_network_wifi_rssi, current_cicle_start_time_unix_ms, transport->lastWifiRssi(), "wifi_rssi");
   ingestMetricSample(*system_largest_heap_block_size_bytes, current_cicle_start_time_unix_ms, ESP.getMaxAllocHeap(), "largest_heap_block_bytes");
   ingestMetricSample(*system_run_time_ms, current_cicle_start_time_unix_ms, run_time_ms, "run_time_ms");
   ingestMetricSample(*system_remote_write_failures_count, current_cicle_start_time_unix_ms, remote_write_failures, "remote_write_failures_count");
@@ -351,4 +336,18 @@ bool performRemoteWrite()
   temperature->resetSamples();
   humidity->resetSamples();
   return true;
+}
+
+void setCpuLow()
+{
+    setCpuFrequencyMhz(RTC_CPU_FREQ_LOW);
+    Serial.updateBaudRate(SERIAL_BAUD);
+    Serial.println("Clock speed set to " + String(getCpuFrequencyMhz()) + "Mhz");
+}
+
+void setCpuHigh()
+{
+    setCpuFrequencyMhz(RTC_CPU_FREQ_HIGH);
+    Serial.updateBaudRate(SERIAL_BAUD);
+    Serial.println("Clock speed set to " + String(getCpuFrequencyMhz()) + "Mhz");
 }

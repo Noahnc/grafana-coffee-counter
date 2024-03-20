@@ -51,4 +51,4 @@
 
 // clock frequencies (mhz) for the MCU
 #define RTC_CPU_FREQ_HIGH 80
-#define RTC_CPU_FREQ_LOW 20
+#define RTC_CPU_FREQ_LOW 10

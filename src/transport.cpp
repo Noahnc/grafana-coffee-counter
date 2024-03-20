@@ -1,4 +1,5 @@
 #include "transport.h"
+#include "esp_wifi.h"
 
 Transport::Transport(const int wifi_status_pin, const char *wifi_ssid, const char *wifi_password)
     : wifiStatusPin(wifi_status_pin), wifiSSID(wifi_ssid), wifiPassword(wifi_password)
@@ -104,9 +105,14 @@ void Transport::stop()
     digitalWrite(wifiStatusPin, LOW);
 }
 
+int8_t Transport::lastWifiRssi()
+{
+    return last_wiffi_rssi_value;
+}
+
 void Transport::beginAsync()
 {
-    if(connectTaskHandle != NULL)
+    if (connectTaskHandle != NULL)
     {
         return;
     }
@@ -118,6 +124,20 @@ void Transport::beginAsync()
         3, /* Priority of the task */
         &connectTaskHandle,
         tskNO_AFFINITY);
+}
+
+bool Transport::awaitConnectedWifi(uint16_t timeout_sec)
+{
+    const uint32_t task_delay_sec = 1;
+    uint16_t max_wait_cycles = timeout_sec / task_delay_sec;
+    uint16_t current_wait_cycle = 0;
+    while (WiFi.status() != WL_CONNECTED && current_wait_cycle < max_wait_cycles)
+    {
+        vTaskDelay((task_delay_sec * 1000) / portTICK_PERIOD_MS);
+        Serial.print('.');
+        current_wait_cycle++;
+    }
+    return WiFi.status() == WL_CONNECTED;
 }
 
 void Transport::connectTask(void *args)
@@ -171,6 +191,7 @@ void Transport::connectTask(void *args)
         if (WiFi.status() == WL_CONNECTED)
         {
             int8_t dbm = WiFi.RSSI();
+            instance->last_wiffi_rssi_value = dbm;
             if (instance->debug != nullptr)
             {
                 instance->debug->println("Wifi Signal: " + String(dbm) + "dBm");
@@ -192,7 +213,36 @@ void Transport::connectTask(void *args)
             instance->startLedBlink(StatusIndicator::Connecting);
             try
             {
-                instance->promTransport.checkAndReconnectConnection();
+                const int16_t timeout_sec = 1800;
+                if (WiFi.status() != WL_CONNECTED)
+                {
+                    WiFi.disconnect();
+                    yield();
+                    // For some reason, ESP32 can't sometimes reconnect wifi after light sleep.
+                    // Calling esp_wifi_stop before and esp_wifi_start after light sleep seems prevent this issue
+                    esp_wifi_stop();
+                    yield();
+                    esp_wifi_start();
+                    if (instance->debug != nullptr)
+                    {
+                        instance->debug->println("Connecting to " + String(instance->wifiSSID));
+                    }
+
+                    WiFi.mode(WIFI_STA);
+                    WiFi.begin(instance->wifiSSID, instance->wifiPassword);
+                    if (awaitConnectedWifi(timeout_sec))
+                    {
+                        if (instance->debug != nullptr)
+                        {
+                            instance->debug->println("Connected. IP is " + WiFi.localIP());
+                        }
+                    }
+                    else
+                    {
+                        Serial.println("Failed to connect to Wifi after " + String(timeout_sec) + ", rebooting.");
+                        ESP.restart();
+                    }
+                }
             }
             catch (const std::exception &e)
             {

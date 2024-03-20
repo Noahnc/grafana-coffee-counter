@@ -18,8 +18,10 @@ public:
     void beginAsync();
     void stop();
     bool isInitialized();
+    int8_t lastWifiRssi();
     int64_t getTimeMillis();
     PromClient::SendResult send(WriteRequest &req);
+    static bool awaitConnectedWifi(uint16_t timeout_sec);
 
 private:
     const char *wifiSSID;
@@ -31,6 +33,7 @@ private:
     TaskHandle_t blinkTaskHandle = NULL;
     SemaphoreHandle_t semaphore;
     bool transportInitialized = false;
+    int8_t last_wiffi_rssi_value = 0;
 
     // led blinking
     enum class StatusIndicator
