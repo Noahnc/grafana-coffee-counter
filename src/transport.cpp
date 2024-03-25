@@ -234,7 +234,7 @@ void Transport::connectTask(void *args)
                     {
                         if (instance->debug != nullptr)
                         {
-                            instance->debug->println("Connected. IP is " + WiFi.localIP());
+                            instance->debug->println("Connected. IP is " + WiFi.localIP().toString());
                         }
                     }
                     else
